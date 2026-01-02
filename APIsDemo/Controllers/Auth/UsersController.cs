@@ -1,0 +1,223 @@
+﻿using APIsDemo.DTOs.Auth;
+using APIsDemo.DTOs.Auth.JobSeeker;
+using APIsDemo.Models;
+using APIsDemo.Services;
+using APIsDemo.Services.Interfaces;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+
+namespace APIsDemo.Controllers.Auth
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class UsersController : ControllerBase
+    {
+        #region Services: DBContext,JWT,EmailService
+        private readonly AppDbContext _context;
+        private readonly JwtService _jwt;
+        private readonly IEmailService _emailService;
+
+        public UsersController(AppDbContext context, JwtService jwt, IEmailService emailService)
+        {
+            _context = context;
+            _jwt = jwt;
+            _emailService = emailService;
+        }
+        #endregion
+
+        #region Register
+        [HttpPost("Register")]
+        public async Task<IActionResult> Register([FromBody] RegisterUserDto dto)
+        {
+            if(await _context.Users.AnyAsync(u => u.Email == dto.Email))
+            {
+                return BadRequest("Email already registered.");
+            }
+
+            var passwordHash = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(dto.Password));
+
+            var user = new User
+            {
+                Email = dto.Email,
+                Username = dto.Username,
+                PasswordHash = passwordHash
+            };
+
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+
+            // 2. Generate OTP
+            var otp = _emailService.GenerateOtp();
+            user.Otp = otp;
+            user.Otpexpiry = DateTime.UtcNow.AddMinutes(10);
+            await _context.SaveChangesAsync();
+
+            // 3. Send OTP via email
+            await _emailService.SendOtpAsync(user.Email, otp);
+
+            return Ok("User registered! OTP sent to email.");
+
+        }
+        #endregion
+
+        #region Login
+        [HttpPost("Login")]
+        public IActionResult Login(LoginUserDto dto, JwtService jwt)
+        {
+            var user = _context.Users
+                .FirstOrDefault(u => u.Email == dto.Email);
+
+            if (user == null)
+                return Unauthorized("Invalid email");
+
+            var passwordHash = Convert.ToBase64String(Encoding.UTF8.GetBytes(dto.Password));
+
+            if (user.PasswordHash != passwordHash)
+                return Unauthorized("Invalid password");
+
+            var roles = _context.UserRoles
+                .Where(ur => ur.UserId == user.Id)
+                .Select(ur => ur.Role.Name)
+                .ToList();
+
+            const string authorType = "JobSeeker";
+
+            var token = jwt.GenerateToken(
+                authorId: user.Id,
+                email: user.Email,
+                roles: roles,
+                authorType: authorType
+                );
+
+            return Ok(new { Token = token, Roles = roles });
+
+        }
+        #endregion
+
+        #region DefaultAuthUser
+        [Authorize]
+        [HttpGet("default")]
+        public IActionResult GetCurrentUser()
+        {
+            return Ok("You are authenticated!");
+        }
+        #endregion
+
+        #region Admin
+        [Authorize(Roles = "Admin")]
+        [HttpGet("admin")]
+        public IActionResult SecretAdminArea()
+        {
+            return Ok("Only admins can see this.");
+        }
+        #endregion
+
+        #region GoogleLogin
+        [HttpGet("google-login")]
+        public IActionResult GoogleLogin()
+        {
+            var redirectUrl = Url.Action(nameof(GoogleCallback));
+            var properties = new AuthenticationProperties { RedirectUri = redirectUrl };
+            return Challenge(properties, GoogleDefaults.AuthenticationScheme); // "Google"
+        }
+        #endregion
+
+        #region GoogleCallback
+        // 2) Google will redirect here after user signs-in/consents
+        [HttpGet("google-callback")]
+        public async Task<IActionResult> GoogleCallback()
+        {
+            // Ask the Google handler to authenticate the incoming request
+            var authenticateResult = await HttpContext.AuthenticateAsync(GoogleDefaults.AuthenticationScheme);
+
+            if (!authenticateResult.Succeeded || authenticateResult?.Principal == null)
+                return BadRequest("Google authentication failed");
+
+            var externalPrincipal = authenticateResult.Principal;
+
+            // Extract useful claims
+            var email = externalPrincipal.FindFirst(ClaimTypes.Email)?.Value
+                        ?? externalPrincipal.FindFirst(JwtRegisteredClaimNames.Email)?.Value;
+            var googleId = externalPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value; // Google's unique id
+            var name = externalPrincipal.FindFirst(ClaimTypes.Name)?.Value;
+
+            if (string.IsNullOrEmpty(email))
+                return BadRequest("Google did not return an email.");
+
+            // 3) Find local user or create
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null)
+            {
+                user = new User
+                {
+                    Email = email,
+                    Username = name ?? email.Split('@')[0],
+                    PasswordHash = "FakeSecurePassword123!",//Random
+                    IsVerified = true,
+                    IsActive = true
+                };
+                _context.Users.Add(user);
+                
+                await _context.SaveChangesAsync();
+            }
+
+            // Check if ExternalLogin exists
+            var extLogin = await _context.ExternalLogins
+                .FirstOrDefaultAsync(x => x.Provider == "Google" && x.ProviderKey == googleId);
+
+            if (extLogin == null)
+            {
+                extLogin = new ExternalLogin
+                {
+                    UserId = user.Id,
+                    Provider = "Google",
+                    ProviderKey = googleId
+                };
+                _context.ExternalLogins.Add(extLogin);
+                await _context.SaveChangesAsync();
+            }
+
+                var roles = await (
+                    from ur in _context.UserRoles
+                    join r in _context.Roles on ur.RoleId equals r.Id
+                    where ur.UserId == user.Id
+                    select r.Name
+                ).ToListAsync();
+
+            var authorType = "JobSeeker";
+            var token = _jwt.GenerateToken(user.Id, authorType, user.Email, roles);
+
+            // 6) Return token. Real apps often redirect to front-end with token in URL or cookie.
+            return Ok(new { JWT = token });
+        }
+        #endregion
+
+        #region VerifyEmail
+        [HttpPost("verify-email")]
+        public async Task<IActionResult> VerifyEmail([FromBody] VerifyUserEmailDto dto)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
+            if (user == null) return NotFound("User not found.");
+
+            if (user.Otp != dto.Otp || user.Otpexpiry < DateTime.UtcNow)
+                return BadRequest("Invalid or expired OTP.");
+
+            user.IsVerified = true;
+            user.IsActive = true;
+            user.Otp = null;
+            user.Otpexpiry = null;
+            await _context.SaveChangesAsync();
+
+            return Ok("Email verified successfully!");
+        }
+        #endregion
+    }
+}
