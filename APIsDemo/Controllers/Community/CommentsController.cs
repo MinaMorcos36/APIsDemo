@@ -38,5 +38,12 @@ namespace APIsDemo.Controllers.Community
             var result = await _commentService.CreateAsync(postId, authorId, authorType, dto);
             return Ok(result);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> GetComments(int postId)
+        {
+            var comments = await _commentService.GetByPostIdAsync(postId);
+            return Ok(comments);
+        }
     }
 }

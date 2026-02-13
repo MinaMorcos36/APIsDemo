@@ -55,5 +55,30 @@ namespace APIsDemo.Services.Implementations
             };
         }
 
+        public async Task<IEnumerable<CommentDto>> GetByPostIdAsync(int postId)
+        {
+            var comments = await _context.Comments
+                .Where(c => c.PostId == postId && c.ParentCommentId == null)
+                .Include(c => c.InverseParentComment)
+                .OrderBy(c => c.CreatedAt)
+                .ToListAsync();
+
+            return comments.Select(c => new CommentDto
+            {
+                Id = c.Id,
+                Content = c.Content,
+                AuthorId = c.AuthorId,
+                AuthorType = c.AuthorType,
+                CreatedAt = c.CreatedAt,
+                Replies = c.InverseParentComment.Select(r => new CommentDto
+                {
+                    Id = r.Id,
+                    Content = r.Content,
+                    AuthorId = r.AuthorId,
+                    AuthorType = r.AuthorType,
+                    CreatedAt = r.CreatedAt
+                }).ToList()
+            });
+        }
     }
 }
