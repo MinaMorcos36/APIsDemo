@@ -1,5 +1,6 @@
 ﻿using APIsDemo.DTOs.Auth;
 using APIsDemo.DTOs.Auth.JobSeeker;
+using APIsDemo.DTOs.UserProfile;
 using APIsDemo.Models;
 using APIsDemo.Services;
 using APIsDemo.Services.Interfaces;
@@ -219,5 +220,117 @@ namespace APIsDemo.Controllers.Auth
             return Ok("Email verified successfully!");
         }
         #endregion
+
+        #region UpdateProfile
+        [Authorize]
+        [HttpPatch("me/profile")]
+        public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileDto dto)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized();
+
+            var userId = int.Parse(userIdClaim);
+
+            var profile = await _context.UserProfiles
+                .FirstOrDefaultAsync(p => p.UserId == userId);
+
+            if (profile == null)
+            {
+                profile = new UserProfile
+                {
+                    UserId = userId
+                };
+
+                _context.UserProfiles.Add(profile);
+                await _context.SaveChangesAsync();
+            }
+
+            if (dto.Bio != null)
+                profile.Bio = dto.Bio;
+
+            if (dto.Headline != null)
+                profile.Headline = dto.Headline;
+
+            if (dto.Major != null)
+                profile.Major = dto.Major;
+
+            if (dto.University != null)
+                profile.University = dto.University;
+
+            if (dto.PictureUrl != null)
+                profile.PictureUrl = dto.PictureUrl;
+
+            if (dto.CvUrl != null)
+                profile.Cvurl = dto.CvUrl;
+
+            if (dto.FirstName != null)
+                profile.FirstName = dto.FirstName;
+
+            if (dto.LastName != null)
+                profile.LastName = dto.LastName;
+
+            if (dto.Phone != null)
+                profile.Phone = dto.Phone;
+
+            if (dto.Birthdate != null)
+                profile.Birthdate = dto.Birthdate;
+
+            if (dto.Address != null)
+                profile.Address = dto.Address;
+
+            await _context.SaveChangesAsync();
+
+            return Ok("Profile updated successfully");
+        }
+
+        #endregion
+
+        #region GetProfile
+        [Authorize]
+        [HttpGet("me/profile")]
+        public async Task<IActionResult> GetProfile()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userIdClaim == null)
+                return Unauthorized();
+
+            var userId = int.Parse(userIdClaim);
+
+            var profile = await _context.UserProfiles
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.UserId == userId);
+
+            if (profile == null)
+            {
+                profile = new UserProfile
+                {
+                    UserId = userId
+                };
+
+                _context.UserProfiles.Add(profile);
+                await _context.SaveChangesAsync();
+            }
+
+            var response = new ProfileResponseDto
+            {
+                Bio = profile.Bio,
+                Headline = profile.Headline,
+                Major = profile.Major,
+                University = profile.University,
+                PictureUrl = profile.PictureUrl,
+                CvUrl = profile.Cvurl,
+                FirstName = profile.FirstName,
+                LastName = profile.LastName,
+                Phone = profile.Phone,
+                Birthdate = profile.Birthdate,
+                Address = profile.Address
+            };
+
+            return Ok(response);
+        }
+        #endregion
+
     }
 }

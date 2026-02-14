@@ -6,10 +6,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace APIsDemo.Models;
 
-[Keyless]
 [Table("UserProfile")]
 public partial class UserProfile
 {
+    [Key]
     public int Id { get; set; }
 
     public int UserId { get; set; }
@@ -44,4 +44,7 @@ public partial class UserProfile
 
     [StringLength(200)]
     public string? Address { get; set; }
+
+    [ForeignKey("UserId")]
+    public User User { get; set; }
 }
