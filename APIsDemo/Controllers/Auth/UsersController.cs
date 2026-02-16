@@ -32,7 +32,13 @@ namespace APIsDemo.Controllers.Auth
             _jwt = jwt;
             _emailService = emailService;
         }
+
+        private int GetAuthorId()
+        {
+            return int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        }
         #endregion
+
 
         #region Register
         [HttpPost("Register")]
@@ -329,6 +335,29 @@ namespace APIsDemo.Controllers.Auth
             };
 
             return Ok(response);
+        }
+        #endregion
+
+        #region Saved Posts
+        [Authorize]
+        [HttpGet("SavedPosts")]
+        public async Task<IActionResult> GetSavedPosts()
+        {
+            var authorId = GetAuthorId();
+            var savedPosts = await _context.SavedPosts
+                .Where(sp => sp.AuthorId == authorId)
+                .Select(sp => new SavedPostsDto
+                {
+                    SavedPostId = sp.Id,
+                    SavedAt = sp.SavedAt,
+                    PostId = sp.Post.Id,
+                    Content = sp.Post.Content,
+                    CreatedAt = sp.Post.CreatedAt,
+                    AuthorId = sp.Post.AuthorId,
+                    AuthorType = sp.Post.AuthorType
+                })
+                .ToListAsync();
+            return Ok(savedPosts);
         }
         #endregion
 
