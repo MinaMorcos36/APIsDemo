@@ -43,6 +43,10 @@ public partial class Company
 
     public bool IsActive { get; set; }
 
+    public string Overview { get; set; } = null!;
+
+    public string? PictureUrl { get; set; }
+
     [ForeignKey("IndustryId")]
     [InverseProperty("Companies")]
     public virtual Industry Industry { get; set; } = null!;

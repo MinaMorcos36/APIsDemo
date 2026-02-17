@@ -14,6 +14,20 @@ public partial class UserProfile
 
     public int UserId { get; set; }
 
+    [StringLength(60)]
+    public string? FirstName { get; set; }
+
+    [StringLength(60)]
+    public string? LastName { get; set; }
+
+    public DateOnly? Birthdate { get; set; }
+
+    [StringLength(200)]
+    public string? Address { get; set; }
+
+    [StringLength(50)]
+    public string? Phone { get; set; }
+
     [StringLength(500)]
     public string? Bio { get; set; }
 
@@ -31,20 +45,7 @@ public partial class UserProfile
     [Column("CVUrl")]
     public string? Cvurl { get; set; }
 
-    [StringLength(60)]
-    public string? FirstName { get; set; }
-
-    [StringLength(60)]
-    public string? LastName { get; set; }
-
-    [StringLength(50)]
-    public string? Phone { get; set; }
-
-    public DateOnly? Birthdate { get; set; }
-
-    [StringLength(200)]
-    public string? Address { get; set; }
-
     [ForeignKey("UserId")]
-    public User User { get; set; }
+    [InverseProperty("UserProfiles")]
+    public virtual User User { get; set; } = null!;
 }

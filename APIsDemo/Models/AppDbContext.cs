@@ -249,7 +249,9 @@ public partial class AppDbContext : DbContext
 
         modelBuilder.Entity<UserProfile>(entity =>
         {
-            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.HasOne(d => d.User).WithMany(p => p.UserProfiles)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_UserProfile_Users");
         });
 
         modelBuilder.Entity<UserRole>(entity =>
