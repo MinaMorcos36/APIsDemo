@@ -40,9 +40,7 @@ namespace APIsDemo.Controllers.Auth
 
             var company = new Company
             {
-                IndustryId = dto.IndustryId,
                 Email = dto.Email,
-                Name = dto.Name,
                 PasswordHash = passwordHash
             };
 

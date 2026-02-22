@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace APIsDemo.Models;
 
-[Table("Skill")]
 [Index("Name", Name = "UQ__Skill__737584F60DB80E88", IsUnique = true)]
 public partial class Skill
 {

@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace APIsDemo.Models;
 
 [PrimaryKey("UserId", "SkillId")]
+[Table("UserSkill")]
 public partial class UserSkill
 {
     [Key]

@@ -26,11 +26,11 @@ public partial class Comment
 
     public DateTime? UpdatedAt { get; set; }
 
+    [InverseProperty("Comment")]
+    public virtual ICollection<CommentLike> CommentLikes { get; set; } = new List<CommentLike>();
+
     [InverseProperty("ParentComment")]
     public virtual ICollection<Comment> InverseParentComment { get; set; } = new List<Comment>();
-
-    [InverseProperty("Comment")]
-    public virtual ICollection<LikedComment> LikedComments { get; set; } = new List<LikedComment>();
 
     [ForeignKey("ParentCommentId")]
     [InverseProperty("InverseParentComment")]

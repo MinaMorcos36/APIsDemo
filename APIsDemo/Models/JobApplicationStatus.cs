@@ -6,9 +6,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace APIsDemo.Models;
 
-[Table("ApplicationStatus")]
 [Index("Name", Name = "UQ__Applicat__737584F615BEDFCC", IsUnique = true)]
-public partial class ApplicationStatus
+public partial class JobApplicationStatus
 {
     [Key]
     public int Id { get; set; }
@@ -17,5 +16,5 @@ public partial class ApplicationStatus
     public string? Name { get; set; }
 
     [InverseProperty("Status")]
-    public virtual ICollection<Application> Applications { get; set; } = new List<Application>();
+    public virtual ICollection<JobApplication> JobApplications { get; set; } = new List<JobApplication>();
 }

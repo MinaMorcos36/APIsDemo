@@ -49,14 +49,14 @@ namespace APIsDemo.Services.Implementations
                     AuthorId = p.AuthorId,
                     AuthorType = p.AuthorType,
 
-                    LikesCount = p.LikedPosts.Count,
+                    LikesCount = p.PostLikes.Count,
                     CommentsCount = p.Comments.Count,
 
-                    IsLikedByMe = p.LikedPosts.Any(l =>
+                    IsLikedByMe = p.PostLikes.Any(l =>
                         l.AuthorId == authorId &&
                         l.AuthorType == authorType),
 
-                    IsSavedByMe = p.SavedPosts.Any(s =>
+                    IsSavedByMe = p.PostSaves.Any(s =>
                         s.AuthorId == authorId &&
                         s.AuthorType == authorType),
 
@@ -80,33 +80,17 @@ namespace APIsDemo.Services.Implementations
                 .Where(u => userAuthorIds.Contains(u.Id))
                 .Select(u => new
                 {
-                    u.Id,
-                    Name = u.Username
+                    u.Id
                 })
-                .ToDictionaryAsync(x => x.Id, x => x.Name);
+                .ToDictionaryAsync(x => x.Id);
 
             var companies = await _context.Companies
                 .Where(c => companyAuthorIds.Contains(c.Id))
                 .Select(c => new
                 {
-                    c.Id,
-                    c.Name
+                    c.Id
                 })
-                .ToDictionaryAsync(x => x.Id, x => x.Name);
-
-            foreach (var post in posts)
-            {
-                if (post.AuthorType == "JobSeeker" &&
-                    users.TryGetValue(post.AuthorId, out var Username))
-                {
-                    post.AuthorName = Username;
-                }
-                else if (post.AuthorType == "Recruiter" &&
-                         companies.TryGetValue(post.AuthorId, out var companyName))
-                {
-                    post.AuthorName = companyName;
-                }
-            }
+                .ToDictionaryAsync(x => x.Id);
 
             return posts;
         }

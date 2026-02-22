@@ -15,17 +15,17 @@ namespace APIsDemo.Services.Implementations
 
         public async Task<bool> ToggleSaveAsync(int postId, int authorId, string authorType)
         {
-            var existingSave = await _context.SavedPosts
+            var existingSave = await _context.PostSaves
                 .FirstOrDefaultAsync(ps => ps.PostId == postId && ps.AuthorId == authorId && ps.AuthorType == authorType);
 
             if (existingSave != null)
             {
-                _context.SavedPosts.Remove(existingSave);
+                _context.PostSaves.Remove(existingSave);
                 await _context.SaveChangesAsync();
                 return false;
             }
 
-            var save = new SavedPost
+            var save = new PostSave
             {
                 PostId = postId,
                 AuthorId = authorId,
@@ -33,7 +33,7 @@ namespace APIsDemo.Services.Implementations
                 SavedAt = DateTime.UtcNow
             };
 
-            _context.SavedPosts.Add(save);
+            _context.PostSaves.Add(save);
             await _context.SaveChangesAsync();
             return true;
         }

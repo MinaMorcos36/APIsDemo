@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace APIsDemo.Models;
 
-[Table("Industry")]
 [Index("Name", Name = "UQ__Industry__737584F66F3BB049", IsUnique = true)]
 public partial class Industry
 {
@@ -17,5 +16,5 @@ public partial class Industry
     public string Name { get; set; } = null!;
 
     [InverseProperty("Industry")]
-    public virtual ICollection<Company> Companies { get; set; } = new List<Company>();
+    public virtual ICollection<CompanyOverview> CompanyOverviews { get; set; } = new List<CompanyOverview>();
 }
