@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace APIsDemo.Models;
 
-public partial class SavedPost
+public partial class PostLike
 {
     [Key]
     public int Id { get; set; }
@@ -18,9 +18,9 @@ public partial class SavedPost
     [StringLength(20)]
     public string? AuthorType { get; set; }
 
-    public DateTime? SavedAt { get; set; }
+    public DateTime? CreatedAt { get; set; }
 
     [ForeignKey("PostId")]
-    [InverseProperty("SavedPosts")]
+    [InverseProperty("PostLikes")]
     public virtual Post Post { get; set; } = null!;
 }

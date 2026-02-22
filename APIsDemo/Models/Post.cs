@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace APIsDemo.Models;
 
-[Table("Post")]
 public partial class Post
 {
     [Key]
@@ -27,8 +26,8 @@ public partial class Post
     public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
 
     [InverseProperty("Post")]
-    public virtual ICollection<LikedPost> LikedPosts { get; set; } = new List<LikedPost>();
+    public virtual ICollection<PostLike> PostLikes { get; set; } = new List<PostLike>();
 
     [InverseProperty("Post")]
-    public virtual ICollection<SavedPost> SavedPosts { get; set; } = new List<SavedPost>();
+    public virtual ICollection<PostSave> PostSaves { get; set; } = new List<PostSave>();
 }

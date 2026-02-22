@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace APIsDemo.Models;
 
-[Table("Job")]
 public partial class Job
 {
     [Key]
@@ -28,10 +27,10 @@ public partial class Job
 
     public bool? IsActive { get; set; }
 
-    [InverseProperty("Job")]
-    public virtual ICollection<Application> Applications { get; set; } = new List<Application>();
-
     [ForeignKey("CompanyId")]
     [InverseProperty("Jobs")]
     public virtual Company Company { get; set; } = null!;
+
+    [InverseProperty("Job")]
+    public virtual ICollection<JobApplication> JobApplications { get; set; } = new List<JobApplication>();
 }

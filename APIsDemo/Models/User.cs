@@ -13,9 +13,6 @@ public partial class User
     public int Id { get; set; }
 
     [StringLength(100)]
-    public string Username { get; set; } = null!;
-
-    [StringLength(100)]
     public string Email { get; set; } = null!;
 
     public string PasswordHash { get; set; } = null!;

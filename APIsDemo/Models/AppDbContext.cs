@@ -15,19 +15,13 @@ public partial class AppDbContext : DbContext
     {
     }
 
-    public virtual DbSet<Application> Applications { get; set; }
-
-    public virtual DbSet<ApplicationStatus> ApplicationStatuses { get; set; }
-
     public virtual DbSet<Comment> Comments { get; set; }
+
+    public virtual DbSet<CommentLike> CommentLikes { get; set; }
 
     public virtual DbSet<Company> Companies { get; set; }
 
-    public virtual DbSet<Conversation> Conversations { get; set; }
-
-    public virtual DbSet<Cvanalysis> Cvanalyses { get; set; }
-
-    public virtual DbSet<Cvdocument> Cvdocuments { get; set; }
+    public virtual DbSet<CompanyOverview> CompanyOverviews { get; set; }
 
     public virtual DbSet<ExternalLogin> ExternalLogins { get; set; }
 
@@ -35,19 +29,19 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<Job> Jobs { get; set; }
 
-    public virtual DbSet<LikedComment> LikedComments { get; set; }
+    public virtual DbSet<JobApplication> JobApplications { get; set; }
 
-    public virtual DbSet<LikedPost> LikedPosts { get; set; }
-
-    public virtual DbSet<Message> Messages { get; set; }
+    public virtual DbSet<JobApplicationStatus> JobApplicationStatuses { get; set; }
 
     public virtual DbSet<Post> Posts { get; set; }
+
+    public virtual DbSet<PostLike> PostLikes { get; set; }
+
+    public virtual DbSet<PostSave> PostSaves { get; set; }
 
     public virtual DbSet<RefreshToken> RefreshTokens { get; set; }
 
     public virtual DbSet<Role> Roles { get; set; }
-
-    public virtual DbSet<SavedPost> SavedPosts { get; set; }
 
     public virtual DbSet<Skill> Skills { get; set; }
 
@@ -67,26 +61,6 @@ public partial class AppDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Application>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PK__Applicat__3214EC07AFDDEDF2");
-
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
-
-            entity.HasOne(d => d.Job).WithMany(p => p.Applications)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Applicati__JobId__693CA210");
-
-            entity.HasOne(d => d.Status).WithMany(p => p.Applications)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Applicati__Statu__6A30C649");
-        });
-
-        modelBuilder.Entity<ApplicationStatus>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PK__Applicat__3214EC07739D5A44");
-        });
-
         modelBuilder.Entity<Comment>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Comment__3214EC0740635D43");
@@ -100,40 +74,33 @@ public partial class AppDbContext : DbContext
                 .HasConstraintName("FK__Comment__PostId__70DDC3D8");
         });
 
+        modelBuilder.Entity<CommentLike>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__CommentL__3214EC078EE7A75F");
+
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
+
+            entity.HasOne(d => d.Comment).WithMany(p => p.CommentLikes)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__CommentLi__Comme__00200768");
+        });
+
         modelBuilder.Entity<Company>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Company__3214EC071A4063EC");
+        });
 
-            entity.HasOne(d => d.Industry).WithMany(p => p.Companies)
+        modelBuilder.Entity<CompanyOverview>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__CompanyO__3214EC070B4B1998");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+
+            entity.HasOne(d => d.Company).WithMany(p => p.CompanyOverviews).HasConstraintName("FK_CompanyOverviews_Companies");
+
+            entity.HasOne(d => d.Industry).WithMany(p => p.CompanyOverviews)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Company__Industr__5DCAEF64");
-        });
-
-        modelBuilder.Entity<Conversation>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PK__Conversa__3214EC07AD870D84");
-
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
-
-            entity.HasOne(d => d.Analysis).WithMany(p => p.Conversations).HasConstraintName("FK__Conversat__Analy__0A9D95DB");
-        });
-
-        modelBuilder.Entity<Cvanalysis>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PK__CVAnalys__3214EC070A2134B6");
-
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
-
-            entity.HasOne(d => d.Cv).WithMany(p => p.Cvanalyses)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__CVAnalysis__CVId__06CD04F7");
-        });
-
-        modelBuilder.Entity<Cvdocument>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PK__CVDocume__3214EC07CA7F8F8C");
-
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
+                .HasConstraintName("FK_CompanyOverviews_Industries");
         });
 
         modelBuilder.Entity<ExternalLogin>(entity =>
@@ -162,37 +129,24 @@ public partial class AppDbContext : DbContext
                 .HasConstraintName("FK__Job__CompanyId__628FA481");
         });
 
-        modelBuilder.Entity<LikedComment>(entity =>
+        modelBuilder.Entity<JobApplication>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__CommentL__3214EC078EE7A75F");
+            entity.HasKey(e => e.Id).HasName("PK__Applicat__3214EC07AFDDEDF2");
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
 
-            entity.HasOne(d => d.Comment).WithMany(p => p.LikedComments)
+            entity.HasOne(d => d.Job).WithMany(p => p.JobApplications)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__CommentLi__Comme__00200768");
+                .HasConstraintName("FK__Applicati__JobId__693CA210");
+
+            entity.HasOne(d => d.Status).WithMany(p => p.JobApplications)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__Applicati__Statu__6A30C649");
         });
 
-        modelBuilder.Entity<LikedPost>(entity =>
+        modelBuilder.Entity<JobApplicationStatus>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__PostLike__3214EC076B099ED1");
-
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
-
-            entity.HasOne(d => d.Post).WithMany(p => p.LikedPosts)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__PostLikes__PostI__76969D2E");
-        });
-
-        modelBuilder.Entity<Message>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PK__Messages__3214EC07ECA6831A");
-
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
-
-            entity.HasOne(d => d.Convo).WithMany(p => p.Messages)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Messages__ConvoI__0E6E26BF");
+            entity.HasKey(e => e.Id).HasName("PK__Applicat__3214EC07739D5A44");
         });
 
         modelBuilder.Entity<Post>(entity =>
@@ -200,6 +154,28 @@ public partial class AppDbContext : DbContext
             entity.HasKey(e => e.Id).HasName("PK__Post__3214EC07F4CC029C");
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
+        });
+
+        modelBuilder.Entity<PostLike>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__PostLike__3214EC076B099ED1");
+
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
+
+            entity.HasOne(d => d.Post).WithMany(p => p.PostLikes)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__PostLikes__PostI__76969D2E");
+        });
+
+        modelBuilder.Entity<PostSave>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__PostSave__3214EC076B33CD70");
+
+            entity.Property(e => e.SavedAt).HasDefaultValueSql("(getdate())");
+
+            entity.HasOne(d => d.Post).WithMany(p => p.PostSaves)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__PostSaved__PostI__7B5B524B");
         });
 
         modelBuilder.Entity<RefreshToken>(entity =>
@@ -217,17 +193,6 @@ public partial class AppDbContext : DbContext
         modelBuilder.Entity<Role>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Role__3214EC07DE90308F");
-        });
-
-        modelBuilder.Entity<SavedPost>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PK__PostSave__3214EC076B33CD70");
-
-            entity.Property(e => e.SavedAt).HasDefaultValueSql("(getdate())");
-
-            entity.HasOne(d => d.Post).WithMany(p => p.SavedPosts)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__PostSaved__PostI__7B5B524B");
         });
 
         modelBuilder.Entity<Skill>(entity =>
@@ -249,6 +214,8 @@ public partial class AppDbContext : DbContext
 
         modelBuilder.Entity<UserProfile>(entity =>
         {
+            entity.HasKey(e => e.Id).HasName("PK_UserProfile");
+
             entity.HasOne(d => d.User).WithMany(p => p.UserProfiles)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_UserProfile_Users");

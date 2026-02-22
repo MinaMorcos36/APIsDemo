@@ -54,7 +54,6 @@ namespace APIsDemo.Controllers.Auth
             var user = new User
             {
                 Email = dto.Email,
-                Username = dto.Username,
                 PasswordHash = passwordHash
             };
 
@@ -166,7 +165,6 @@ namespace APIsDemo.Controllers.Auth
                 user = new User
                 {
                     Email = email,
-                    Username = name ?? email.Split('@')[0],
                     PasswordHash = "FakeSecurePassword123!",//Random
                     IsVerified = true,
                     IsActive = true
@@ -344,7 +342,7 @@ namespace APIsDemo.Controllers.Auth
         public async Task<IActionResult> GetSavedPosts()
         {
             var authorId = GetAuthorId();
-            var savedPosts = await _context.SavedPosts
+            var savedPosts = await _context.PostSaves
                 .Where(sp => sp.AuthorId == authorId)
                 .Select(sp => new SavedPostsDto
                 {

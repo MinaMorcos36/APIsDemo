@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace APIsDemo.Models;
 
-[Table("RefreshToken")]
 [Index("Token", Name = "UQ__RefreshT__1EB4F8170BEA11F2", IsUnique = true)]
 public partial class RefreshToken
 {

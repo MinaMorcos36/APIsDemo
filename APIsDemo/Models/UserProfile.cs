@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace APIsDemo.Models;
 
-[Table("UserProfile")]
 public partial class UserProfile
 {
     [Key]

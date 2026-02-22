@@ -15,17 +15,17 @@ namespace APIsDemo.Services.Implementations
 
         public async Task<bool> ToggleLikeAsync(int postId, int authorId, string authorType)
         {
-            var existingLike = await _context.LikedPosts
+            var existingLike = await _context.PostLikes
                 .FirstOrDefaultAsync(pl => pl.PostId == postId && pl.AuthorId == authorId);
 
             if (existingLike != null)
             {
-                _context.LikedPosts.Remove(existingLike);
+                _context.PostLikes.Remove(existingLike);
                 await _context.SaveChangesAsync();
                 return false;
             }
 
-            var like = new LikedPost
+            var like = new PostLike
             {
                 PostId = postId,
                 AuthorId = authorId,
@@ -33,7 +33,7 @@ namespace APIsDemo.Services.Implementations
                 CreatedAt = DateTime.UtcNow
             };
 
-            _context.LikedPosts.Add(like);
+            _context.PostLikes.Add(like);
             await _context.SaveChangesAsync();
 
             return true;

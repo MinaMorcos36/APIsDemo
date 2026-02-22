@@ -6,8 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace APIsDemo.Models;
 
-[Table("Application")]
-public partial class Application
+public partial class JobApplication
 {
     [Key]
     public int Id { get; set; }
@@ -23,10 +22,10 @@ public partial class Application
     public DateTime? UpdatedAt { get; set; }
 
     [ForeignKey("JobId")]
-    [InverseProperty("Applications")]
+    [InverseProperty("JobApplications")]
     public virtual Job Job { get; set; } = null!;
 
     [ForeignKey("StatusId")]
-    [InverseProperty("Applications")]
-    public virtual ApplicationStatus Status { get; set; } = null!;
+    [InverseProperty("JobApplications")]
+    public virtual JobApplicationStatus Status { get; set; } = null!;
 }
