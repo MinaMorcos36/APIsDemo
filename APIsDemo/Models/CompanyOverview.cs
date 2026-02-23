@@ -13,7 +13,7 @@ public partial class CompanyOverview
 
     public int CompanyId { get; set; }
 
-    public int IndustryId { get; set; }
+    public int? IndustryId { get; set; }
 
     [StringLength(50)]
     public string? Name { get; set; }
@@ -23,7 +23,6 @@ public partial class CompanyOverview
 
     [StringLength(255)]
     public string? Address { get; set; }
-
     public string Overview { get; set; } = null!;
 
     [StringLength(255)]

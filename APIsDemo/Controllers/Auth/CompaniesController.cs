@@ -1,11 +1,15 @@
 ﻿using APIsDemo.DTOs;
 using APIsDemo.DTOs.Auth.Company;
 using APIsDemo.DTOs.Auth.JobSeeker;
+using APIsDemo.DTOs.CompanyOverview;
+using APIsDemo.DTOs.UserProfile;
 using APIsDemo.Models;
 using APIsDemo.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using System.Text;
 
 namespace APIsDemo.Controllers.Auth
@@ -101,6 +105,59 @@ namespace APIsDemo.Controllers.Auth
 
             return Ok("Email verified successfully!");
         }
+        #endregion
+
+        #region UpdateOverview
+        [Authorize]
+        [HttpPatch("me/overview")]
+        public async Task<IActionResult> UpdateOverview([FromBody] UpdateOverviewDto dto)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized();
+
+            var userId = int.Parse(userIdClaim);
+
+            var overview = await _context.CompanyOverviews
+                .FirstOrDefaultAsync(o => o.CompanyId == userId);
+
+            if (overview == null)
+            {
+                overview = new CompanyOverview
+                {
+                    CompanyId = userId
+                };
+
+                _context.CompanyOverviews.Add(overview);
+                await _context.SaveChangesAsync();
+            }
+
+            if (dto.IndustryId != null)
+                overview.IndustryId = dto.IndustryId;
+
+            if (dto.Name != null)
+                overview.Name = dto.Name;
+
+            if (dto.Phone != null)
+                overview.Phone = dto.Phone;
+
+            if (dto.Address != null)
+                overview.Address = dto.Address;
+
+            if (dto.Overview != null)
+                overview.Overview = dto.Overview;
+
+            if (dto.WebsiteUrl != null)
+                overview.WebsiteUrl = dto.WebsiteUrl;
+
+            if (dto.PictureUrl != null)
+                overview.PictureUrl = dto.PictureUrl;
+
+            await _context.SaveChangesAsync();
+
+            return Ok("Overview updated successfully");
+        }
+
         #endregion
     }
 }
