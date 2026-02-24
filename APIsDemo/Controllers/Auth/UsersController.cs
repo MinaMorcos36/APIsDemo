@@ -39,72 +39,89 @@ namespace APIsDemo.Controllers.Auth
         }
         #endregion
 
-
         #region Register
         [HttpPost("Register")]
         public async Task<IActionResult> Register([FromBody] RegisterUserDto dto)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             if(await _context.Users.AnyAsync(u => u.Email == dto.Email))
             {
                 return BadRequest("Email already registered.");
             }
+            if (await _context.UserProfiles.AnyAsync(u => u.Phone == dto.Phone))
+            {
+                return BadRequest("Phone already registered.");
+            }
 
-            var passwordHash = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(dto.Password));
+            if (dto.Password != dto.ConfirmPassword)
+                return BadRequest("Password and ConfirmPassword do not match.");
 
             var user = new User
             {
                 Email = dto.Email,
-                PasswordHash = passwordHash
+                IsVerified = false,
+                IsActive = false
             };
+
+            var hasher = new Microsoft.AspNetCore.Identity.PasswordHasher<User>();
+            user.PasswordHash = hasher.HashPassword(user, dto.Password);
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            // 2. Generate OTP
+            var profile = new UserProfile
+            {
+                UserId = user.Id,
+                FirstName = dto.FirstName,
+                LastName = dto.LastName,
+                Birthdate = dto.Birthdate,
+                Phone = dto.Phone
+            };
+
+            _context.UserProfiles.Add(profile);
+            await _context.SaveChangesAsync();
+
             var otp = _emailService.GenerateOtp();
             user.Otp = otp;
             user.Otpexpiry = DateTime.UtcNow.AddMinutes(10);
             await _context.SaveChangesAsync();
 
-            // 3. Send OTP via email
             await _emailService.SendOtpAsync(user.Email, otp);
 
             return Ok("User registered! OTP sent to email.");
-
         }
         #endregion
 
         #region Login
         [HttpPost("Login")]
-        public IActionResult Login(LoginUserDto dto, JwtService jwt)
+        public async Task<IActionResult> Login([FromBody] LoginUserDto dto)
         {
-            var user = _context.Users
-                .FirstOrDefault(u => u.Email == dto.Email);
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == dto.Email);
 
             if (user == null)
                 return Unauthorized("Invalid email");
 
-            var passwordHash = Convert.ToBase64String(Encoding.UTF8.GetBytes(dto.Password));
+            if (!user.IsVerified)
+                return Unauthorized("Email not verified. Please verify your email before login.");
 
-            if (user.PasswordHash != passwordHash)
+            var hasher = new PasswordHasher<User>();
+            var verifyResult = hasher.VerifyHashedPassword(user, user.PasswordHash, dto.Password);
+            if (verifyResult == PasswordVerificationResult.Failed)
                 return Unauthorized("Invalid password");
 
-            var roles = _context.UserRoles
+            var roles = await _context.UserRoles
                 .Where(ur => ur.UserId == user.Id)
                 .Select(ur => ur.Role.Name)
-                .ToList();
+                .ToListAsync();
 
             const string authorType = "JobSeeker";
 
-            var token = jwt.GenerateToken(
-                authorId: user.Id,
-                email: user.Email,
-                roles: roles,
-                authorType: authorType
-                );
+            var token = _jwt.GenerateToken(user.Id, authorType, user.Email, roles);
 
             return Ok(new { Token = token, Roles = roles });
-
         }
         #endregion
 
@@ -358,6 +375,5 @@ namespace APIsDemo.Controllers.Auth
             return Ok(savedPosts);
         }
         #endregion
-
     }
 }
