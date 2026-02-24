@@ -94,7 +94,7 @@ public partial class AppDbContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PK__CompanyO__3214EC070B4B1998");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
 
             entity.HasOne(d => d.Company).WithMany(p => p.CompanyOverviews).HasConstraintName("FK_CompanyOverviews_Companies");
 

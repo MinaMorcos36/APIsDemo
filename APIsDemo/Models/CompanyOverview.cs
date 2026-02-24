@@ -23,7 +23,7 @@ public partial class CompanyOverview
 
     [StringLength(255)]
     public string? Address { get; set; }
-    public string Overview { get; set; } = null!;
+    public string? Overview { get; set; }
 
     [StringLength(255)]
     public string? WebsiteUrl { get; set; }

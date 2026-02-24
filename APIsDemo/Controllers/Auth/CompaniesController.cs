@@ -35,29 +35,50 @@ namespace APIsDemo.Controllers.Auth
         [HttpPost("Register")]
         public async Task<IActionResult> Register([FromBody] RegisterCompanyDto dto)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             if (await _context.Companies.AnyAsync(c => c.Email == dto.Email))
             {
                 return BadRequest("Email already registered.");
             }
-
-            var passwordHash = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(dto.Password));
+            if (await _context.UserProfiles.AnyAsync(c => c.Phone == dto.Phone))
+            {
+                return BadRequest("Phone already registered.");
+            }
 
             var company = new Company
             {
                 Email = dto.Email,
-                PasswordHash = passwordHash
+                IsVerified = false,
+                IsActive = false
             };
+
+            var hasher = new Microsoft.AspNetCore.Identity.PasswordHasher<Company>();
+            company.PasswordHash = hasher.HashPassword(company, dto.Password);
 
             _context.Companies.Add(company);
             await _context.SaveChangesAsync();
 
-            // 2. Generate OTP
+            var overview = new CompanyOverview
+            {
+                CompanyId = company.Id,
+                IndustryId = dto.IndustryId,
+                Name = dto.Name,
+                Phone = dto.Phone,
+                Address = dto.Address,
+                WebsiteUrl = dto.WebsiteUrl,
+                PictureUrl = dto.PictureUrl
+            };
+
+            _context.CompanyOverviews.Add(overview);
+            await _context.SaveChangesAsync();
+
             var otp = _emailService.GenerateOtp();
             company.Otp = otp;
             company.Otpexpiry = DateTime.UtcNow.AddMinutes(10);
             await _context.SaveChangesAsync();
 
-            // 3. Send OTP via email
             await _emailService.SendOtpAsync(company.Email, otp);
 
             return Ok("Company registered! OTP sent to email.");
@@ -67,24 +88,26 @@ namespace APIsDemo.Controllers.Auth
 
         #region Login
         [HttpPost("Login")]
-        public IActionResult Login(LoginCompanyDto dto, JwtService jwt)
+        public async Task<IActionResult> Login([FromBody] LoginCompanyDto dto)
         {
-            var company = _context.Companies
-                .FirstOrDefault(c => c.Email == dto.Email);
+            var company = await _context.Companies
+                .FirstOrDefaultAsync(c => c.Email == dto.Email);
 
             if (company == null)
                 return Unauthorized("Invalid email");
 
-            var passwordHash = Convert.ToBase64String(Encoding.UTF8.GetBytes(dto.Password));
+            if (!company.IsVerified)
+                return Unauthorized("Email not verified. Please verify your email before login.");
 
-            if (company.PasswordHash != passwordHash)
+            var hasher = new Microsoft.AspNetCore.Identity.PasswordHasher<Company>();
+            var verifyResult = hasher.VerifyHashedPassword(company, company.PasswordHash, dto.Password);
+            if (verifyResult == Microsoft.AspNetCore.Identity.PasswordVerificationResult.Failed)
                 return Unauthorized("Invalid password");
 
             var authorType = "Recruiter";
-            var token = jwt.GenerateToken(company.Id, authorType, company.Email);
+            var token = _jwt.GenerateToken(company.Id, authorType, company.Email);
 
-            return Ok(new { Token = token});
-
+            return Ok(new { Token = token });
         }
         #endregion
 
@@ -99,6 +122,7 @@ namespace APIsDemo.Controllers.Auth
                 return BadRequest("Invalid or expired OTP.");
 
             company.IsVerified = true;
+            company.IsActive = true;
             company.Otp = null;
             company.Otpexpiry = null;
             await _context.SaveChangesAsync();

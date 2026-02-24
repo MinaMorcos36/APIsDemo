@@ -1,19 +1,15 @@
-﻿using APIsDemo.DTOs.Auth;
-using APIsDemo.DTOs.Auth.JobSeeker;
+﻿using APIsDemo.DTOs.Auth.JobSeeker;
 using APIsDemo.DTOs.UserProfile;
 using APIsDemo.Models;
-using APIsDemo.Services;
 using APIsDemo.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text;
 
 namespace APIsDemo.Controllers.Auth
 {
