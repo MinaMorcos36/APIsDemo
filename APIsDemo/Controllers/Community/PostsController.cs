@@ -1,11 +1,7 @@
 ﻿using APIsDemo.DTOs.Community.Posts;
-using APIsDemo.Models;
-using APIsDemo.Services.Implementations;
 using APIsDemo.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
 namespace APIsDemo.Controllers.Community
@@ -35,7 +31,6 @@ namespace APIsDemo.Controllers.Community
         {
             return User.FindFirstValue("AuthorType")!;
         }
-
 
         #region Create Post
         [HttpPost]
