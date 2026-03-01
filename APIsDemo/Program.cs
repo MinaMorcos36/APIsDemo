@@ -64,6 +64,7 @@ builder.Services.AddScoped<IPostLikeService, PostLikeService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IPostSaveService, PostSaveService>();
 builder.Services.AddScoped<IJobService, JobService>();
+builder.Services.AddScoped<ICommunityService, CommunityService>();
 
 
 var app = builder.Build();
