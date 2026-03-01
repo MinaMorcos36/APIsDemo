@@ -41,7 +41,8 @@ namespace APIsDemo.Tests.Controllers
 
             _jwtService = new JwtService(mockConfig.Object);
 
-            _controller = new UsersController(_context, _jwtService, _mockEmailService.Object);
+            var userService = new UserService(_context, _jwtService, _mockEmailService.Object);
+            _controller = new UsersController(_context, _jwtService, _mockEmailService.Object, userService);
         }
 
         [Fact]

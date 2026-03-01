@@ -21,13 +21,17 @@ namespace APIsDemo.Controllers.Auth
         private readonly AppDbContext _context;
         private readonly JwtService _jwt;
         private readonly IEmailService _emailService;
+        private readonly IUserService _userService;
 
-        public UsersController(AppDbContext context, JwtService jwt, IEmailService emailService)
+        public UsersController(AppDbContext context, JwtService jwt, IEmailService emailService, IUserService userService)
         {
             _context = context;
             _jwt = jwt;
             _emailService = emailService;
+            _userService = userService;
         }
+
+        // Single constructor with all required services is used for DI
 
         private int GetAuthorId()
         {
@@ -61,7 +65,7 @@ namespace APIsDemo.Controllers.Auth
                 IsActive = false
             };
 
-            var hasher = new Microsoft.AspNetCore.Identity.PasswordHasher<User>();
+            var hasher = new PasswordHasher<User>();
             user.PasswordHash = hasher.HashPassword(user, dto.Password);
 
             _context.Users.Add(user);
@@ -94,30 +98,15 @@ namespace APIsDemo.Controllers.Auth
         [HttpPost("Login")]
         public async Task<IActionResult> Login([FromBody] LoginUserDto dto)
         {
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Email == dto.Email);
-
-            if (user == null)
-                return Unauthorized("Invalid email");
-
-            if (!user.IsVerified)
-                return Unauthorized("Email not verified. Please verify your email before login.");
-
-            var hasher = new PasswordHasher<User>();
-            var verifyResult = hasher.VerifyHashedPassword(user, user.PasswordHash, dto.Password);
-            if (verifyResult == PasswordVerificationResult.Failed)
-                return Unauthorized("Invalid password");
-
-            var roles = await _context.UserRoles
-                .Where(ur => ur.UserId == user.Id)
-                .Select(ur => ur.Role.Name)
-                .ToListAsync();
-
-            const string authorType = "JobSeeker";
-
-            var token = _jwt.GenerateToken(user.Id, authorType, user.Email, roles);
-
-            return Ok(new { Token = token, Roles = roles });
+            try
+            {
+                var (token, roles) = await _userService.LoginAsync(dto);
+                return Ok(new { Token = token, Roles = roles });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Unauthorized(ex.Message);
+            }
         }
         #endregion
 
@@ -222,19 +211,19 @@ namespace APIsDemo.Controllers.Auth
         [HttpPost("verify-email")]
         public async Task<IActionResult> VerifyEmail([FromBody] VerifyUserEmailDto dto)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
-            if (user == null) return NotFound("User not found.");
-
-            if (user.Otp != dto.Otp || user.Otpexpiry < DateTime.UtcNow)
-                return BadRequest("Invalid or expired OTP.");
-
-            user.IsVerified = true;
-            user.IsActive = true;
-            user.Otp = null;
-            user.Otpexpiry = null;
-            await _context.SaveChangesAsync();
-
-            return Ok("Email verified successfully!");
+            try
+            {
+                await _userService.VerifyEmailAsync(dto);
+                return Ok("Email verified successfully!");
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
         #endregion
 
@@ -248,57 +237,15 @@ namespace APIsDemo.Controllers.Auth
                 return Unauthorized();
 
             var userId = int.Parse(userIdClaim);
-
-            var profile = await _context.UserProfiles
-                .FirstOrDefaultAsync(p => p.UserId == userId);
-
-            if (profile == null)
+            try
             {
-                profile = new UserProfile
-                {
-                    UserId = userId
-                };
-
-                _context.UserProfiles.Add(profile);
-                await _context.SaveChangesAsync();
+                await _userService.UpdateProfileAsync(userId, dto);
+                return Ok("Profile updated successfully");
             }
-
-            if (dto.Bio != null)
-                profile.Bio = dto.Bio;
-
-            if (dto.Headline != null)
-                profile.Headline = dto.Headline;
-
-            if (dto.Major != null)
-                profile.Major = dto.Major;
-
-            if (dto.University != null)
-                profile.University = dto.University;
-
-            if (dto.PictureUrl != null)
-                profile.PictureUrl = dto.PictureUrl;
-
-            if (dto.CvUrl != null)
-                profile.Cvurl = dto.CvUrl;
-
-            if (dto.FirstName != null)
-                profile.FirstName = dto.FirstName;
-
-            if (dto.LastName != null)
-                profile.LastName = dto.LastName;
-
-            if (dto.Phone != null)
-                profile.Phone = dto.Phone;
-
-            if (dto.Birthdate != null)
-                profile.Birthdate = dto.Birthdate;
-
-            if (dto.Address != null)
-                profile.Address = dto.Address;
-
-            await _context.SaveChangesAsync();
-
-            return Ok("Profile updated successfully");
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         #endregion
@@ -314,38 +261,15 @@ namespace APIsDemo.Controllers.Auth
                 return Unauthorized();
 
             var userId = int.Parse(userIdClaim);
-
-            var profile = await _context.UserProfiles
-                .AsNoTracking()
-                .FirstOrDefaultAsync(p => p.UserId == userId);
-
-            if (profile == null)
+            try
             {
-                profile = new UserProfile
-                {
-                    UserId = userId
-                };
-
-                _context.UserProfiles.Add(profile);
-                await _context.SaveChangesAsync();
+                var response = await _userService.GetProfileAsync(userId);
+                return Ok(response);
             }
-
-            var response = new ProfileResponseDto
+            catch (Exception ex)
             {
-                Bio = profile.Bio,
-                Headline = profile.Headline,
-                Major = profile.Major,
-                University = profile.University,
-                PictureUrl = profile.PictureUrl,
-                CvUrl = profile.Cvurl,
-                FirstName = profile.FirstName,
-                LastName = profile.LastName,
-                Phone = profile.Phone,
-                Birthdate = profile.Birthdate,
-                Address = profile.Address
-            };
-
-            return Ok(response);
+                return BadRequest(ex.Message);
+            }
         }
         #endregion
 
