@@ -54,6 +54,11 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<UserRole> UserRoles { get; set; }
 
     public virtual DbSet<UserSkill> UserSkills { get; set; }
+    public DbSet<CvModel> Cvs { get; set; }
+
+    public DbSet<ChatMessageModel> ChatMessages { get; set; }
+
+    public DbSet<ConversationModel> Conversations { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
