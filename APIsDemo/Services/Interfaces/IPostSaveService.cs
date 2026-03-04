@@ -2,6 +2,6 @@
 {
     public interface IPostSaveService
     {
-        Task<bool> ToggleSaveAsync(int postId, int authorId, string authorType);
+        Task<bool> ToggleSaveAsync(int postId);
     }
 }
