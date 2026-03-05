@@ -23,4 +23,9 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Services\Implementations\AI\" />
+    <Folder Include="Services\Interfaces\AI\" />
+  </ItemGroup>
+
 </Project>

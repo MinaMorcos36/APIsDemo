@@ -2,7 +2,7 @@ using APIsDemo.DTOs;
 using APIsDemo.DTOs.Auth.Company;
 using APIsDemo.DTOs.CompanyOverview;
 using APIsDemo.Models;
-using APIsDemo.Services.Interfaces;
+using APIsDemo.Services.Interfaces.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.Design;
 using System.Security.Claims;
 
-namespace APIsDemo.Services.Implementations
+namespace APIsDemo.Services.Implementations.Authentication
 {
     public class CompanyService : ICompanyService
     {

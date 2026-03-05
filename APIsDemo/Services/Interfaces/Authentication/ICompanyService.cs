@@ -3,7 +3,7 @@ using APIsDemo.DTOs.Auth.Company;
 using APIsDemo.DTOs.CompanyOverview;
 using Microsoft.AspNetCore.Mvc;
 
-namespace APIsDemo.Services.Interfaces
+namespace APIsDemo.Services.Interfaces.Authentication
 {
     public interface ICompanyService
     {
