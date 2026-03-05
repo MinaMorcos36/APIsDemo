@@ -1,4 +1,4 @@
-﻿namespace APIsDemo.Services.Interfaces
+﻿namespace APIsDemo.Services.Interfaces.Community
 {
     public interface IPostSaveService
     {

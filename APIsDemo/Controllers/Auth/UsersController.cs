@@ -1,6 +1,6 @@
 ﻿using APIsDemo.DTOs.Auth.JobSeeker;
 using APIsDemo.DTOs.UserProfile;
-using APIsDemo.Services.Interfaces;
+using APIsDemo.Services.Interfaces.Authentication;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;

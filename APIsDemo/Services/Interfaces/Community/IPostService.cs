@@ -1,6 +1,6 @@
 ﻿using APIsDemo.DTOs.Community.Posts;
 
-namespace APIsDemo.Services.Interfaces
+namespace APIsDemo.Services.Interfaces.Community
 {
     public interface IPostService
     {

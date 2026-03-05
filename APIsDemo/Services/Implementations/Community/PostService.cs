@@ -1,10 +1,10 @@
 ﻿using APIsDemo.DTOs.Community.Posts;
 using APIsDemo.Models;
-using APIsDemo.Services.Interfaces;
+using APIsDemo.Services.Interfaces.Community;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
-namespace APIsDemo.Services.Implementations
+namespace APIsDemo.Services.Implementations.Community
 {
     public class PostService : IPostService
     {

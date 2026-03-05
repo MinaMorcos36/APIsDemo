@@ -1,5 +1,5 @@
 ﻿using APIsDemo.DTOs.Community.Posts;
-using APIsDemo.Services.Interfaces;
+using APIsDemo.Services.Interfaces.Community;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

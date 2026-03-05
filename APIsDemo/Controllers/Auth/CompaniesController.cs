@@ -1,6 +1,6 @@
 ﻿using APIsDemo.DTOs.Auth.Company;
 using APIsDemo.DTOs.CompanyOverview;
-using APIsDemo.Services.Interfaces;
+using APIsDemo.Services.Interfaces.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

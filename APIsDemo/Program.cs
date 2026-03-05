@@ -1,6 +1,8 @@
 using APIsDemo.Models;
-using APIsDemo.Services.Implementations;
-using APIsDemo.Services.Interfaces;
+using APIsDemo.Services.Implementations.Authentication;
+using APIsDemo.Services.Implementations.Community;
+using APIsDemo.Services.Interfaces.Authentication;
+using APIsDemo.Services.Interfaces.Community;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;

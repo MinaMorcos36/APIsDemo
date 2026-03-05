@@ -1,7 +1,7 @@
 ﻿using APIsDemo.DTOs.Auth.JobSeeker;
 using APIsDemo.DTOs.UserProfile;
 using APIsDemo.Models;
-using APIsDemo.Services.Interfaces;
+using APIsDemo.Services.Interfaces.Authentication;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Http;
@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
-namespace APIsDemo.Services.Implementations
+namespace APIsDemo.Services.Implementations.Authentication
 {
     public class UserService : IUserService
     {

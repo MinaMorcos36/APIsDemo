@@ -2,7 +2,7 @@
 using APIsDemo.DTOs.UserProfile;
 using Microsoft.AspNetCore.Mvc;
 
-namespace APIsDemo.Services.Interfaces
+namespace APIsDemo.Services.Interfaces.Authentication
 {
     public interface IUserService
     {
