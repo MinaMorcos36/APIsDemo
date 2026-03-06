@@ -1,6 +1,6 @@
 using APIsDemo.DTOs.Community.Jobs;
 
-namespace APIsDemo.Services.Interfaces
+namespace APIsDemo.Services.Interfaces.Community
 {
     public interface IJobService
     {

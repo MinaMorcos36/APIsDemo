@@ -1,9 +1,9 @@
 using APIsDemo.DTOs.Community.Jobs;
 using APIsDemo.Models;
-using APIsDemo.Services.Interfaces;
+using APIsDemo.Services.Interfaces.Community;
 using System.Security.Claims;
 
-namespace APIsDemo.Services.Implementations
+namespace APIsDemo.Services.Implementations.Community
 {
     public class JobService : IJobService
     {
