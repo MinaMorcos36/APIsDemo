@@ -1,9 +1,10 @@
-using APIsDemo.DTOs.Jobs;
+using APIsDemo.DTOs.Community.Jobs;
+using APIsDemo.DTOs.Community.Jobs;
 using APIsDemo.Services.Interfaces.Community;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace APIsDemo.Controllers
+namespace APIsDemo.Controllers.Community
 {
     [Route("api/[controller]")]
     [ApiController]

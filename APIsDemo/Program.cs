@@ -70,6 +70,7 @@ builder.Services.AddScoped<IPostSaveService, PostSaveService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICompanyService, CompanyService>();
 builder.Services.AddScoped<IJobService, JobService>();
+builder.Services.AddScoped<ICommunityService, CommunityService>();
 
 var app = builder.Build();
 
