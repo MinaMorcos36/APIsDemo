@@ -1,6 +1,7 @@
 using APIsDemo.DTOs.Community.Jobs;
 using APIsDemo.Models;
 using APIsDemo.Services.Interfaces.Community;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace APIsDemo.Services.Implementations.Community
@@ -58,6 +59,52 @@ namespace APIsDemo.Services.Implementations.Community
                 Location = job.Location,
                 CreatedAt = job.CreatedAt
             };
+        }
+
+        public async Task<List<JobFeedDto>> GetFeedAsync()
+        {
+            var authorId = GetAuthorId();
+            var authorType = GetAuthorType();
+
+            var jobs = await _context.Jobs
+                .OrderByDescending(j => j.CreatedAt)
+                .Select(j => new JobFeedDto
+                {
+                    Id = j.Id,
+                    Title = j.Title,
+                    Description = j.Description,
+                    Location = j.Location,
+                    CreatedAt = j.CreatedAt!.Value,
+
+                    CompanyId = j.CompanyId,
+                    CompanyName = null!,
+
+                    ApplicantsCount = j.JobApplications.Count,
+                    IsAppliedByMe = j.JobApplications.Any(a => a.ApplicantId == authorId),
+                    IsActive = j.IsActive ?? true
+                })
+                .ToListAsync();
+
+            var companyIds = jobs.Select(j => j.CompanyId).Distinct().ToList();
+
+            var overviews = await _context.CompanyOverviews
+                .Where(co => companyIds.Contains(co.CompanyId))
+                .Select(co => new { co.CompanyId, co.Name })
+                .ToDictionaryAsync(x => x.CompanyId);
+
+            foreach (var job in jobs)
+            {
+                if (overviews.TryGetValue(job.CompanyId, out var ov) && !string.IsNullOrWhiteSpace(ov.Name))
+                {
+                    job.CompanyName = ov.Name;
+                }
+                else
+                {
+                    job.CompanyName = string.Empty;
+                }
+            }
+
+            return jobs;
         }
     }
 }

@@ -93,21 +93,45 @@ namespace APIsDemo.Services.Implementations.Community
                 .Distinct()
                 .ToList();
 
-            var users = await _context.Users
-                .Where(u => userAuthorIds.Contains(u.Id))
-                .Select(u => new
+            var userProfiles = await _context.UserProfiles
+                .Where(up => userAuthorIds.Contains(up.UserId))
+                .Select(up => new
                 {
-                    u.Id
+                    up.UserId,
+                    Name = ((up.FirstName ?? string.Empty) + " " + (up.LastName ?? string.Empty)).Trim()
                 })
-                .ToDictionaryAsync(x => x.Id);
+                .ToDictionaryAsync(x => x.UserId);
 
-            var companies = await _context.Companies
-                .Where(c => companyAuthorIds.Contains(c.Id))
-                .Select(c => new
+            var companyOverviews = await _context.CompanyOverviews
+                .Where(co => companyAuthorIds.Contains(co.CompanyId))
+                .Select(co => new
                 {
-                    c.Id
+                    co.CompanyId,
+                    Name = co.Name ?? string.Empty
                 })
-                .ToDictionaryAsync(x => x.Id);
+                .ToDictionaryAsync(x => x.CompanyId);
+
+            foreach (var p in posts)
+            {
+                if (p.AuthorType == "JobSeeker")
+                {
+                    if (userProfiles.TryGetValue(p.AuthorId, out var up) && !string.IsNullOrWhiteSpace(up.Name))
+                        p.AuthorName = up.Name;
+                    else
+                        p.AuthorName = string.Empty;
+                }
+                else if (p.AuthorType == "Recruiter")
+                {
+                    if (companyOverviews.TryGetValue(p.AuthorId, out var co) && !string.IsNullOrWhiteSpace(co.Name))
+                        p.AuthorName = co.Name;
+                    else
+                        p.AuthorName = string.Empty;
+                }
+                else
+                {
+                    p.AuthorName = string.Empty;
+                }
+            }
 
             return posts;
         }

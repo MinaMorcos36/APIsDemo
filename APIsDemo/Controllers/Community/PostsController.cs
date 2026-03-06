@@ -62,16 +62,5 @@ namespace APIsDemo.Controllers.Community
             });
         }
         #endregion
-
-        #region Feed
-        [HttpGet("feed")]
-        [Authorize]
-        public async Task<IActionResult> GetFeed()
-        {
-            var feed = await _postService.GetFeedAsync();
-            return Ok(feed);
-        }
-
-        #endregion
     }
 }
