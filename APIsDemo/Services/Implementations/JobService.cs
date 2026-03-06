@@ -1,4 +1,4 @@
-using APIsDemo.DTOs.Jobs;
+using APIsDemo.DTOs.Community.Jobs;
 using APIsDemo.Models;
 using APIsDemo.Services.Interfaces;
 using System.Security.Claims;

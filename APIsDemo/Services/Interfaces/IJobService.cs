@@ -1,4 +1,4 @@
-using APIsDemo.DTOs.Jobs;
+using APIsDemo.DTOs.Community.Jobs;
 
 namespace APIsDemo.Services.Interfaces
 {

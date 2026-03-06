@@ -1,4 +1,4 @@
-namespace APIsDemo.DTOs.Jobs
+namespace APIsDemo.DTOs.Community.Jobs
 {
     public class CreateJobDto
     {
