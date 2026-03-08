@@ -107,6 +107,62 @@ namespace APIsDemo.Services.Implementations.Community
             return jobs;
         }
 
+        public async Task<List<CompanysJobDto>> GetJobsAsync()
+        {
+            var authorId = GetAuthorId();
+            var authorType = GetAuthorType();
+            // Build base query over Job entities so we can optionally filter before projection
+            var jobsQuery = _context.Jobs
+                .OrderByDescending(j => j.CreatedAt)
+                .AsQueryable();
+
+            // If the caller is a recruiter, only return jobs belonging to their company
+            if (authorType == "Recruiter")
+            {
+                var companyId = GetAuthorId();
+                jobsQuery = jobsQuery.Where(j => j.CompanyId == companyId);
+            }
+
+            var jobs = await jobsQuery
+                .Select(j => new CompanysJobDto
+                {
+                    Id = j.Id,
+                    Title = j.Title,
+                    Description = j.Description,
+                    Location = j.Location,
+                    CreatedAt = j.CreatedAt!.Value,
+
+                    CompanyId = j.CompanyId,
+                    CompanyName = null!,
+
+                    ApplicantsCount = j.JobApplications.Count,
+                    IsActive = j.IsActive ?? true
+                })
+                .ToListAsync();
+
+            // Resolve company names for returned jobs
+            var companyIds = jobs.Select(j => j.CompanyId).Distinct().ToList();
+            var overviews = await _context.CompanyOverviews
+                .Where(co => companyIds.Contains(co.CompanyId))
+                .Select(co => new { co.CompanyId, co.Name })
+                .ToDictionaryAsync(x => x.CompanyId);
+
+            foreach (var job in jobs)
+            {
+                if (overviews.TryGetValue(job.CompanyId, out var ov) && !string.IsNullOrWhiteSpace(ov.Name))
+                {
+                    job.CompanyName = ov.Name;
+                }
+                else
+                {
+                    job.CompanyName = string.Empty;
+                }
+            }
+
+            return jobs;
+
+        }
+
         public async Task ApplyAsync(int jobId)
         {
             var authorType = GetAuthorType();
@@ -146,7 +202,7 @@ namespace APIsDemo.Services.Implementations.Community
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<DTOs.Community.Jobs.JobApplicationDto>> GetApplicationsAsync(int? jobId = null)
+        public async Task<List<JobApplicationDto>> GetApplicationsAsync(int? jobId = null)
         {
             var authorType = GetAuthorType();
             if (authorType != "Recruiter")
@@ -245,7 +301,9 @@ namespace APIsDemo.Services.Implementations.Community
                 Title = job.Title,
                 Description = job.Description,
                 Location = job.Location,
-                CreatedAt = job.CreatedAt
+                CreatedAt = job.CreatedAt,
+                UpdatedAt = job.UpdatedAt,
+                IsActive = isActive? true : false,
             };
         }
     }

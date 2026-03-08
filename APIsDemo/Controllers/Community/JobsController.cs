@@ -35,6 +35,13 @@ namespace APIsDemo.Controllers.Community
             return Ok(feed);
         }
 
+        [HttpGet("my-jobs")]
+        public async Task<IActionResult> GetJobs()
+        {
+            var jobs = await _jobService.GetJobsAsync();
+            return Ok(jobs);
+        }
+
         [HttpPost("{jobId}/apply")]
         public async Task<IActionResult> Apply(int jobId)
         {
