@@ -64,9 +64,12 @@ namespace APIsDemo.Controllers.Community
         }
 
         [HttpPost("{jobId}/set-active")]
-        public async Task<IActionResult> SetActive(int jobId, [FromQuery] bool isActive)
+        public async Task<IActionResult> SetActive(int jobId, [FromBody] SetActiveDto dto)
         {
-            var job = await _jobService.SetActiveAsync(jobId, isActive);
+            if (dto == null)
+                return BadRequest("Request body is required.");
+
+            var job = await _jobService.SetActiveAsync(jobId, dto.IsActive);
             return Ok(job);
         }
     }
