@@ -9,6 +9,7 @@ namespace APIsDemo.Services.Interfaces.Community
         Task<List<CompanysJobDto>> GetJobsAsync();
         Task ApplyAsync(int jobId);
         Task<List<JobApplicationDto>> GetApplicationsAsync(int? jobId = null);
+        Task<List<JobApplicationDto>> GetMyApplicationsAsync();
         Task ApproveApplicationAsync(int applicationId);
         Task DeclineApplicationAsync(int applicationId);
         Task<JobResponseDto> SetActiveAsync(int jobId, bool isActive);
