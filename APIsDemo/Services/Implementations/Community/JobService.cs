@@ -237,6 +237,35 @@ namespace APIsDemo.Services.Implementations.Community
             return list;
         }
 
+        public async Task<List<JobApplicationDto>> GetMyApplicationsAsync()
+        {
+            var authorType = GetAuthorType();
+            if (authorType == "Recruiter")
+                throw new UnauthorizedAccessException("Only jobseekers can view their applications.");
+
+            var applicantId = GetAuthorId();
+
+            var list = await _context.JobApplications
+                .Include(a => a.Job)
+                .Include(a => a.Status)
+                .Where(a => a.ApplicantId == applicantId)
+                .OrderByDescending(a => a.CreatedAt)
+                .Select(a => new JobApplicationDto
+                {
+                    Id = a.Id,
+                    JobId = a.JobId,
+                    JobTitle = a.Job.Title,
+                    ApplicantId = a.ApplicantId,
+                    ApplicantEmail = _context.Users.Where(u => u.Id == a.ApplicantId).Select(u => u.Email).FirstOrDefault()!,
+                    CreatedAt = a.CreatedAt!.Value,
+                    StatusId = a.StatusId,
+                    StatusName = a.Status.Name ?? string.Empty
+                })
+                .ToListAsync();
+
+            return list;
+        }
+
         public async Task ApproveApplicationAsync(int applicationId)
         {
             await UpdateApplicationStatus(applicationId, "Approved");

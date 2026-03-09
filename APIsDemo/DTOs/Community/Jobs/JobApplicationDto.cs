@@ -1,4 +1,3 @@
-using System;
 
 namespace APIsDemo.DTOs.Community.Jobs
 {

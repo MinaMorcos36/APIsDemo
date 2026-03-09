@@ -1,5 +1,4 @@
 using APIsDemo.DTOs.Community.Jobs;
-using APIsDemo.DTOs.Community.Jobs;
 using APIsDemo.Services.Interfaces.Community;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -53,6 +52,13 @@ namespace APIsDemo.Controllers.Community
         public async Task<IActionResult> GetApplications([FromQuery] int? jobId)
         {
             var apps = await _jobService.GetApplicationsAsync(jobId);
+            return Ok(apps);
+        }
+
+        [HttpGet("my-applications")]
+        public async Task<IActionResult> GetMyApplications()
+        {
+            var apps = await _jobService.GetMyApplicationsAsync();
             return Ok(apps);
         }
 
