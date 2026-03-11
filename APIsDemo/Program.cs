@@ -3,6 +3,8 @@ using APIsDemo.Services.Implementations.Authentication;
 using APIsDemo.Services.Implementations.Community;
 using APIsDemo.Services.Interfaces.Authentication;
 using APIsDemo.Services.Interfaces.Community;
+using APIsDemo.Services.Interfaces.Admin;
+using APIsDemo.Services.Implementations.Admin;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -71,6 +73,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICompanyService, CompanyService>();
 builder.Services.AddScoped<IJobService, JobService>();
 builder.Services.AddScoped<ICommunityService, CommunityService>();
+builder.Services.AddScoped<IAdminService, AdminService>();
 
 var app = builder.Build();
 
