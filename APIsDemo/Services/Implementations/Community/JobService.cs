@@ -57,7 +57,8 @@ namespace APIsDemo.Services.Implementations.Community
                 Title = job.Title,
                 Description = job.Description,
                 Location = job.Location,
-                CreatedAt = job.CreatedAt
+                CreatedAt = job.CreatedAt,
+                IsActive = true
             };
         }
 
