@@ -4,7 +4,6 @@ using APIsDemo.Models;
 using APIsDemo.Services.Interfaces.Authentication;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -114,16 +113,6 @@ namespace APIsDemo.Services.Implementations.Authentication
             var token = _jwt.GenerateToken(user.Id, authorType, user.Email, roles);
 
             return new OkObjectResult(new { Token = token, Roles = roles });
-        }
-
-        public async Task<IActionResult> GetCurrentUserAsync()
-        {
-            return new OkObjectResult("You are authenticated!");
-        }
-
-        public async Task<IActionResult> SecretAdminAreaAsync()
-        {
-            return new OkObjectResult("Only admins can see this.");
         }
 
         public async Task<IActionResult> GoogleCallbackAsync()

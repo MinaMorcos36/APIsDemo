@@ -13,7 +13,5 @@ namespace APIsDemo.Services.Interfaces.Authentication
         Task<IActionResult> UpdateProfileAsync(UpdateProfileDto dto);
         Task<IActionResult> GetProfileAsync();
         Task<IActionResult> GetSavedPostsAsync();
-        Task<IActionResult> GetCurrentUserAsync();
-        Task<IActionResult> SecretAdminAreaAsync();
     }
 }
