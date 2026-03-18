@@ -35,24 +35,6 @@ namespace APIsDemo.Controllers.Auth
         }
         #endregion
 
-        #region DefaultAuthUser
-        [Authorize]
-        [HttpGet("default")]
-        public async Task<IActionResult> GetCurrentUser()
-        {
-            return await _userService.GetCurrentUserAsync();
-        }
-        #endregion
-
-        #region Admin
-        [Authorize(Roles = "Admin")]
-        [HttpGet("admin")]
-        public async Task<IActionResult> SecretAdminArea()
-        {
-            return await _userService.SecretAdminAreaAsync();
-        }
-        #endregion
-
         #region GoogleLogin
         [HttpGet("google-login")]
         public IActionResult GoogleLogin()
