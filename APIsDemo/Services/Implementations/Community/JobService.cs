@@ -2,6 +2,7 @@ using APIsDemo.DTOs.Community.Jobs;
 using APIsDemo.Models;
 using APIsDemo.Services.Interfaces.Community;
 using Microsoft.EntityFrameworkCore;
+using APIsDemo.Services.Extensions;
 using System.Security.Claims;
 
 namespace APIsDemo.Services.Implementations.Community
@@ -108,7 +109,7 @@ namespace APIsDemo.Services.Implementations.Community
             return jobs;
         }
 
-        public async Task<List<CompanysJobDto>> GetJobsAsync()
+        public async Task<List<CompanysJobDto>> GetJobsAsync(string? filter = null)
         {
             var authorId = GetAuthorId();
             var authorType = GetAuthorType();
@@ -123,6 +124,9 @@ namespace APIsDemo.Services.Implementations.Community
                 var companyId = GetAuthorId();
                 jobsQuery = jobsQuery.Where(j => j.CompanyId == companyId);
             }
+
+            // Apply filter (all/active/closed)
+            jobsQuery = jobsQuery.ApplyJobFilter(filter);
 
             var jobs = await jobsQuery
                 .Select(j => new CompanysJobDto
@@ -203,7 +207,7 @@ namespace APIsDemo.Services.Implementations.Community
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<JobApplicationDto>> GetApplicationsAsync(int? jobId = null)
+        public async Task<List<JobApplicationDto>> GetApplicationsAsync(int? jobId = null, string? filter = null)
         {
             var authorType = GetAuthorType();
             if (authorType != "Recruiter")
@@ -219,6 +223,9 @@ namespace APIsDemo.Services.Implementations.Community
             query = query.Where(a => a.Job.CompanyId == companyId);
             if (jobId.HasValue)
                 query = query.Where(a => a.JobId == jobId.Value);
+
+            // Apply applications filter (all/pending/accepted/rejected)
+            query = query.ApplyApplicationFilter(filter);
 
             var list = await query
                 .OrderByDescending(a => a.CreatedAt)
@@ -238,7 +245,7 @@ namespace APIsDemo.Services.Implementations.Community
             return list;
         }
 
-        public async Task<List<JobApplicationDto>> GetMyApplicationsAsync()
+        public async Task<List<JobApplicationDto>> GetMyApplicationsAsync(string? filter = null)
         {
             var authorType = GetAuthorType();
             if (authorType == "Recruiter")
@@ -250,6 +257,7 @@ namespace APIsDemo.Services.Implementations.Community
                 .Include(a => a.Job)
                 .Include(a => a.Status)
                 .Where(a => a.ApplicantId == applicantId)
+                .ApplyApplicationFilter(filter)
                 .OrderByDescending(a => a.CreatedAt)
                 .Select(a => new JobApplicationDto
                 {

@@ -35,9 +35,9 @@ namespace APIsDemo.Controllers.Community
         }
 
         [HttpGet("my-jobs")]
-        public async Task<IActionResult> GetJobs()
+        public async Task<IActionResult> GetJobs([FromQuery] string? filter)
         {
-            var jobs = await _jobService.GetJobsAsync();
+            var jobs = await _jobService.GetJobsAsync(filter);
             return Ok(jobs);
         }
 
@@ -49,16 +49,16 @@ namespace APIsDemo.Controllers.Community
         }
 
         [HttpGet("applications")]
-        public async Task<IActionResult> GetApplications([FromQuery] int? jobId)
+        public async Task<IActionResult> GetApplications([FromQuery] int? jobId, [FromQuery] string? filter)
         {
-            var apps = await _jobService.GetApplicationsAsync(jobId);
+            var apps = await _jobService.GetApplicationsAsync(jobId, filter);
             return Ok(apps);
         }
 
         [HttpGet("my-applications")]
-        public async Task<IActionResult> GetMyApplications()
+        public async Task<IActionResult> GetMyApplications([FromQuery] string? filter)
         {
-            var apps = await _jobService.GetMyApplicationsAsync();
+            var apps = await _jobService.GetMyApplicationsAsync(filter);
             return Ok(apps);
         }
 
