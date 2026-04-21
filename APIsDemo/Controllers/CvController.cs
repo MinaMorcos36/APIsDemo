@@ -1,6 +1,7 @@
-﻿using APIsDemo.Services;
-using APIsDemo.Models;
+﻿using APIsDemo.Models;
+using APIsDemo.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace APIsDemo.Controllers;
 
@@ -25,13 +26,20 @@ public class CvController : ControllerBase
         _careerChatService = careerChatService;
     }
 
+    private int GetUserId()
+    {
+        return int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    }
+
     // ===============================
-    // 1️⃣ Upload CV فقط (زي ما هو)
+    // 1️⃣ Upload CV
     // ===============================
     [HttpPost("upload")]
     [Consumes("multipart/form-data")]
-    public IActionResult Upload([FromForm] CvUploadRequest dto)
+    public async Task<IActionResult> Upload([FromForm] CvUploadRequest dto)
     {
+        var userId = GetUserId();
+
         if (dto.File == null || dto.File.Length == 0)
             return BadRequest("File is required");
 
@@ -45,27 +53,28 @@ public class CvController : ControllerBase
             return BadRequest(ex.Message);
         }
 
-        var cv = _cvService.Save(dto.UserId, dto.File.FileName, text);
+        var cv = await _cvService.Save(userId, dto.File.FileName, text);
 
         return Ok(new
         {
             cv.Id,
-            cv.UserId,
             cv.FileName,
             cv.Language,
             cv.CreatedAt
         });
     }
 
-    // ==========================================
-    // 2️⃣ Upload + Gemini Auto Evaluation 🔥
-    // ==========================================
+    // ===============================
+    // 2️⃣ Upload + Evaluate
+    // ===============================
     [HttpPost("upload-and-evaluate")]
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> UploadAndEvaluate(
         [FromForm] CvUploadRequest dto,
         [FromForm] string jobDescription)
     {
+        var userId = GetUserId();
+
         if (dto.File == null || dto.File.Length == 0)
             return BadRequest("File is required");
 
@@ -82,7 +91,7 @@ public class CvController : ControllerBase
             return BadRequest(ex.Message);
         }
 
-        var cv = _cvService.Save(dto.UserId, dto.File.FileName, text);
+        var cv = await _cvService.Save(userId, dto.File.FileName, text);
 
         var evaluation = await _geminiService
             .EvaluateAsync(cv.RawText, jobDescription);
@@ -90,11 +99,9 @@ public class CvController : ControllerBase
         return Ok(new
         {
             cv.Id,
-            cv.UserId,
             cv.FileName,
             cv.Language,
             cv.CreatedAt,
-
             Score = evaluation.Score,
             evaluation.Reason,
             evaluation.Shortlisted
@@ -102,27 +109,33 @@ public class CvController : ControllerBase
     }
 
     // ===============================
-    // 3️⃣ Get All CVs
+    // 3️⃣ Get My CVs
     // ===============================
     [HttpGet]
-    public IActionResult GetAll()
+    public async Task<IActionResult> GetAll()
     {
-        var cvs = _cvService.GetAll()
-            .Select(c => new
-            {
-                c.Id,
-                c.UserId,
-                c.FileName,
-                c.Language,
-                c.CreatedAt
-            });
+        var userId = GetUserId();
 
-        return Ok(cvs);
+        var cvs = await _cvService.GetAllByUser(userId);
+
+        return Ok(cvs.Select(c => new
+        {
+            c.Id,
+            c.FileName,
+            c.Language,
+            c.CreatedAt
+        }));
     }
+
+    // ===============================
+    // 4️⃣ Batch Upload
+    // ===============================
     [HttpPost("upload-and-evaluate-batch")]
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> UploadAndEvaluateBatch([FromForm] CvBatchUploadRequest dto)
     {
+        var userId = GetUserId();
+
         if (dto.Files == null || !dto.Files.Any())
             return BadRequest("At least one file is required");
 
@@ -148,13 +161,14 @@ public class CvController : ControllerBase
                 continue;
             }
 
-            var cv = _cvService.Save(dto.UserId, file.FileName, text);
-            var evaluation = await _geminiService.EvaluateAsync(cv.RawText, dto.JobDescription);
+            var cv = await _cvService.Save(userId, file.FileName, text);
+
+            var evaluation = await _geminiService
+                .EvaluateAsync(cv.RawText, dto.JobDescription);
 
             results.Add(new
             {
                 cv.Id,
-                cv.UserId,
                 cv.FileName,
                 cv.Language,
                 cv.CreatedAt,
@@ -166,9 +180,15 @@ public class CvController : ControllerBase
 
         return Ok(results);
     }
+
+    // ===============================
+    // 5️⃣ Career Chat
+    // ===============================
     [HttpPost("career-chat")]
     public async Task<IActionResult> CareerChat([FromBody] CareerChatRequest request)
     {
+        var userId = GetUserId();
+
         if (string.IsNullOrWhiteSpace(request.Message))
             return BadRequest("Message is required");
 
@@ -176,8 +196,7 @@ public class CvController : ControllerBase
 
         if (request.CvId.HasValue)
         {
-            var cv = _cvService.GetAll()
-                .FirstOrDefault(c => c.Id == request.CvId.Value);
+            var cv = await _cvService.GetById(request.CvId.Value, userId);
 
             if (cv != null)
                 cvText = cv.RawText;

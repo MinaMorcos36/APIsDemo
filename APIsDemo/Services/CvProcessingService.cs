@@ -1,23 +1,28 @@
 ﻿using APIsDemo.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace APIsDemo.Services;
 
 public class CvProcessingService
 {
-    private static readonly List<CvModel> _cvs = new();
-
     private readonly LanguageDetectionService _langService;
+    private readonly AppDbContext _context;
 
-    public CvProcessingService(LanguageDetectionService langService)
+    public CvProcessingService(
+        LanguageDetectionService langService,
+        AppDbContext context)
     {
         _langService = langService;
+        _context = context;
     }
 
-    public CvModel Save(Guid userId, string fileName, string text)
+    // ============================
+    // Save CV in Database
+    // ============================
+    public async Task<CvModel> Save(int userId, string fileName, string text)
     {
         var cv = new CvModel
         {
-            Id = Guid.NewGuid(),
             UserId = userId,
             FileName = fileName,
             RawText = text,
@@ -25,9 +30,29 @@ public class CvProcessingService
             CreatedAt = DateTime.UtcNow
         };
 
-        _cvs.Add(cv);
+        _context.Cvs.Add(cv);
+        await _context.SaveChangesAsync();
+
         return cv;
     }
 
-    public List<CvModel> GetAll() => _cvs;
+    // ============================
+    // Get all CVs for a user
+    // ============================
+    public async Task<List<CvModel>> GetAllByUser(int userId)
+    {
+        return await _context.Cvs
+            .Where(c => c.UserId == userId)
+            .OrderByDescending(c => c.CreatedAt)
+            .ToListAsync();
+    }
+
+    // ============================
+    // Get CV by Id (with security)
+    // ============================
+    public async Task<CvModel?> GetById(int cvId, int userId)
+    {
+        return await _context.Cvs
+            .FirstOrDefaultAsync(c => c.Id == cvId && c.UserId == userId);
+    }
 }

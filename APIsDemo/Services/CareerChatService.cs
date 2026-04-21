@@ -20,7 +20,7 @@ public class CareerChatService
     }
 
     public async Task<string> AskAsync(
-    Guid conversationId,
+    int conversationId,
     string userMessage,
     string? cvText = null)
     {

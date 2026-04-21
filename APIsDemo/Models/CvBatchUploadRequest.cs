@@ -7,7 +7,7 @@ namespace APIsDemo.Models
     public class CvBatchUploadRequest
     {
         public List<IFormFile> Files { get; set; } = new();
-        public Guid UserId { get; set; }
+        public int UserId { get; set; }
         public string JobDescription { get; set; } = string.Empty;
     }
 }
