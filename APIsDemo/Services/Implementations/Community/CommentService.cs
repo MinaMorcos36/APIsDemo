@@ -1,26 +1,38 @@
 ﻿using APIsDemo.DTOs.Community.Comments;
 using APIsDemo.Models;
-using APIsDemo.Services.Interfaces;
+using APIsDemo.Services.Interfaces.Community;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
-namespace APIsDemo.Services.Implementations
+namespace APIsDemo.Services.Implementations.Community
 {
     public class CommentService : ICommentService
     {
         private readonly AppDbContext _context;
-        public CommentService(AppDbContext context)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+
+        public CommentService(AppDbContext context, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
+            _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<CommentResponseDto> CreateAsync(int postId, int authorId, string authorType, CreateCommentDto dto)
+        private int GetAuthorId()
         {
-            // Optional safety check
+            return int.Parse(_httpContextAccessor.HttpContext!.User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        }
+
+        private string GetAuthorType()
+        {
+            return _httpContextAccessor.HttpContext!.User.FindFirstValue("AuthorType")!;
+        }
+
+        public async Task<CommentResponseDto> CreateAsync(int postId, CreateCommentDto dto)
+        {
             var postExists = await _context.Posts.AnyAsync(p => p.Id == postId);
             if (!postExists)
                 throw new Exception("Post not found");
 
-            // Optional reply validation
             if (dto.ParentCommentId != null)
             {
                 var parentExists = await _context.Comments
@@ -33,8 +45,8 @@ namespace APIsDemo.Services.Implementations
             var comment = new Comment
             {
                 PostId = postId,
-                AuthorId = authorId,
-                AuthorType = authorType,
+                AuthorId = GetAuthorId(),
+                AuthorType = GetAuthorType(),
                 ParentCommentId = dto.ParentCommentId,
                 Content = dto.Content,
                 CreatedAt = DateTime.UtcNow
@@ -46,8 +58,8 @@ namespace APIsDemo.Services.Implementations
             return new CommentResponseDto
             {
                 Id = comment.Id,
-                AuthorId = authorId,
-                AuthorType = authorType,
+                AuthorId = comment.AuthorId,
+                AuthorType = comment.AuthorType,
                 PostId = postId,
                 ParentCommentId = comment.ParentCommentId,
                 Content = comment.Content,

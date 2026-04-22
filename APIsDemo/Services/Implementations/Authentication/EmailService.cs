@@ -1,8 +1,8 @@
 ﻿using MimeKit;
 using MailKit.Net.Smtp;
-using APIsDemo.Services.Interfaces;
+using APIsDemo.Services.Interfaces.Authentication;
 
-namespace APIsDemo.Services.Implementations
+namespace APIsDemo.Services.Implementations.Authentication
 {
     public class EmailService : IEmailService
     {
