@@ -1,4 +1,5 @@
 ﻿using APIsDemo.DTOs.Auth.JobSeeker;
+using APIsDemo.DTOs.Community;
 using APIsDemo.DTOs.UserProfile;
 using APIsDemo.Models;
 using APIsDemo.Services.Interfaces.Authentication;
