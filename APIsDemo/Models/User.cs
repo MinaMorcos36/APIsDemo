@@ -36,7 +36,4 @@ public partial class User
 
     [InverseProperty("User")]
     public virtual ICollection<UserProfile> UserProfiles { get; set; } = new List<UserProfile>();
-    public List<CvModel> Cvs { get; set; }
-
-    public List<ConversationModel> Conversations { get; set; }
 }

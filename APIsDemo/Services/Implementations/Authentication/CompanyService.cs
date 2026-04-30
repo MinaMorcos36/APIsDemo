@@ -1,5 +1,6 @@
 using APIsDemo.DTOs.Auth.Company;
 using APIsDemo.DTOs.CompanyOverview;
+using APIsDemo.DTOs.Community;
 using APIsDemo.Models;
 using APIsDemo.Services.Interfaces.Authentication;
 using Microsoft.AspNetCore.Identity;
@@ -165,6 +166,61 @@ namespace APIsDemo.Services.Implementations.Authentication
             await _context.SaveChangesAsync();
 
             return new OkObjectResult("Overview updated successfully");
+        }
+
+        public async Task<IActionResult> GetOverviewAsync()
+        {
+            var companyId = GetCompanyId();
+            if (companyId == null) return new UnauthorizedResult();
+
+            var overview = await _context.CompanyOverviews
+                .AsNoTracking()
+                .FirstOrDefaultAsync(o => o.CompanyId == companyId.Value);
+
+            if (overview == null)
+            {
+                overview = new CompanyOverview
+                {
+                    CompanyId = companyId.Value
+                };
+
+                _context.CompanyOverviews.Add(overview);
+                await _context.SaveChangesAsync();
+            }
+
+            var response = new OverviewResponseDto
+            {
+                IndustryId = overview.IndustryId,
+                Name = overview.Name,
+                Phone = overview.Phone,
+                Address = overview.Address,
+                Overview = overview.Overview,
+                WebsiteUrl = overview.WebsiteUrl,
+                PictureUrl = overview.PictureUrl
+            };
+
+            return new OkObjectResult(response);
+        }
+
+        public async Task<IActionResult> GetSavedPostsAsync()
+        {
+            var companyId = GetCompanyId();
+            if (companyId == null) return new UnauthorizedResult();
+
+            var savedPosts = await _context.PostSaves
+                .Where(sp => sp.AuthorId == companyId.Value)
+                .Select(sp => new SavedPostsDto
+                {
+                    SavedPostId = sp.Id,
+                    SavedAt = sp.SavedAt,
+                    PostId = sp.Post.Id,
+                    Content = sp.Post.Content,
+                    CreatedAt = sp.Post.CreatedAt,
+                    AuthorId = sp.Post.AuthorId,
+                    AuthorType = sp.Post.AuthorType
+                })
+                .ToListAsync();
+            return new OkObjectResult(savedPosts);
         }
 
         private bool ValidateModel(object dto)

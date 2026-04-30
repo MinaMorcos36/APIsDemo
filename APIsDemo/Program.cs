@@ -1,7 +1,4 @@
 using APIsDemo.Models;
-using APIsDemo.Services;
-using APIsDemo.Services.Implementations;
-using APIsDemo.Services.Interfaces;
 using APIsDemo.Services.Implementations.Authentication;
 using APIsDemo.Services.Implementations.Community;
 using APIsDemo.Services.Interfaces.Authentication;
@@ -11,7 +8,6 @@ using APIsDemo.Services.Implementations.Admin;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.SemanticKernel;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,13 +25,9 @@ builder.Services.AddScoped<CvProcessingService>();
 builder.Services.AddScoped<GeminiCvEvaluationService>();
 builder.Services.AddScoped<CareerChatService>();
 
-
 builder.Services.AddKernel();
 builder.Services.AddGoogleAIGeminiChatCompletion(builder.Configuration["AI:Gemini:Model"],
 builder.Configuration["AI:Gemini:Apikey"]);
-
-
-
 
 var jwtSettings = builder.Configuration.GetSection("JWT");
 builder.Services.AddAuthentication(options =>

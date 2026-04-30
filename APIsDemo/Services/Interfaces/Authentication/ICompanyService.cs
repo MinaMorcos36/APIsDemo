@@ -11,5 +11,7 @@ namespace APIsDemo.Services.Interfaces.Authentication
         Task<IActionResult> LoginAsync(LoginCompanyDto dto);
         Task<IActionResult> VerifyEmailAsync(VerifyCompanyEmailDto dto);
         Task<IActionResult> UpdateOverviewAsync(UpdateOverviewDto dto);
+        Task<IActionResult> GetOverviewAsync();
+        Task<IActionResult> GetSavedPostsAsync();
     }
 }

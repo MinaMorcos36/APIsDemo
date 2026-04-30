@@ -41,6 +41,24 @@ namespace APIsDemo.Controllers.Auth
         }
         #endregion
 
+        #region GetOverview
+        [Authorize]
+        [HttpGet("me/overview")]
+        public async Task<IActionResult> GetOverview()
+        {
+            return await _companyService.GetOverviewAsync();
+        }
+        #endregion
+
+        #region Saved Posts
+        [Authorize]
+        [HttpGet("SavedPosts")]
+        public async Task<IActionResult> GetSavedPosts()
+        {
+            return await _companyService.GetSavedPostsAsync();
+        }
+        #endregion
+
         #region UpdateOverview
         [Authorize]
         [HttpPatch("me/overview")]

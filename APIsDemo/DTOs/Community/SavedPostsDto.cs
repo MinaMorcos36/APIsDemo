@@ -1,4 +1,4 @@
-﻿namespace APIsDemo.DTOs.UserProfile
+namespace APIsDemo.DTOs.Community
 {
     public class SavedPostsDto
     {
