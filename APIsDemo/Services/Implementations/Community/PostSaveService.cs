@@ -1,20 +1,36 @@
 ﻿using APIsDemo.Models;
-using APIsDemo.Services.Interfaces;
+using APIsDemo.Services.Interfaces.Community;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
-namespace APIsDemo.Services.Implementations
+namespace APIsDemo.Services.Implementations.Community
 {
     public class PostSaveService : IPostSaveService
     {
         private readonly AppDbContext _context;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public PostSaveService(AppDbContext context)
+        public PostSaveService(AppDbContext context, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
+            _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<bool> ToggleSaveAsync(int postId, int authorId, string authorType)
+        private int GetAuthorId()
         {
+            return int.Parse(_httpContextAccessor.HttpContext!.User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        }
+
+        private string GetAuthorType()
+        {
+            return _httpContextAccessor.HttpContext!.User.FindFirstValue("AuthorType")!;
+        }
+
+        public async Task<bool> ToggleSaveAsync(int postId)
+        {
+            var authorId = GetAuthorId();
+            var authorType = GetAuthorType();
+
             var existingSave = await _context.PostSaves
                 .FirstOrDefaultAsync(ps => ps.PostId == postId && ps.AuthorId == authorId && ps.AuthorType == authorType);
 

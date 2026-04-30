@@ -47,6 +47,8 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<SkillLevel> SkillLevels { get; set; }
 
+    public virtual DbSet<TaxSetting> TaxSettings { get; set; }
+
     public virtual DbSet<User> Users { get; set; }
 
     public virtual DbSet<UserProfile> UserProfiles { get; set; }
@@ -208,6 +210,12 @@ public partial class AppDbContext : DbContext
         modelBuilder.Entity<SkillLevel>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__SkillLev__3214EC0750687ADB");
+        });
+
+        modelBuilder.Entity<TaxSetting>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_TaxSetting");
+            entity.Property(e => e.Percentage).HasColumnType("decimal(5,2)");
         });
 
         modelBuilder.Entity<User>(entity =>

@@ -1,12 +1,7 @@
 ﻿using APIsDemo.DTOs.Community.Posts;
-using APIsDemo.Models;
-using APIsDemo.Services.Implementations;
-using APIsDemo.Services.Interfaces;
+using APIsDemo.Services.Interfaces.Community;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 
 namespace APIsDemo.Controllers.Community
 {
@@ -26,17 +21,6 @@ namespace APIsDemo.Controllers.Community
             _SavePostService = savePostService;
         }
 
-        private int GetAuthorId()
-        {
-            return int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        }
-
-        private string GetAuthorType()
-        {
-            return User.FindFirstValue("AuthorType")!;
-        }
-
-
         #region Create Post
         [HttpPost]
         public async Task<IActionResult> CreatePost([FromBody] CreatePostDto dto)
@@ -46,10 +30,7 @@ namespace APIsDemo.Controllers.Community
                 return BadRequest("Post content cannot be empty.");
             }
 
-            var authorId = GetAuthorId();
-            var authorType = GetAuthorType();
-
-            var result = await _postService.CreateAsync(dto, authorId, authorType);
+            var result = await _postService.CreateAsync(dto);
             return Ok(result);
         }
         #endregion
@@ -58,10 +39,7 @@ namespace APIsDemo.Controllers.Community
         [HttpPost("{postId}/like")]
         public async Task<IActionResult> ToggleLike(int postId)
         {
-            var authorId = GetAuthorId();
-            var authorType = GetAuthorType();
-
-            var liked = await _postLikeService.ToggleLikeAsync(postId, authorId, authorType);
+            var liked = await _postLikeService.ToggleLikeAsync(postId);
 
             return Ok(new
             {
@@ -75,10 +53,7 @@ namespace APIsDemo.Controllers.Community
         [HttpPost("{postId}/save")]
         public async Task<IActionResult> ToggleSave(int postId)
         {
-            var authorId = GetAuthorId();
-            var authorType = GetAuthorType();
-
-            var saved = await _SavePostService.ToggleSaveAsync(postId, authorId, authorType);
+            var saved = await _SavePostService.ToggleSaveAsync(postId);
 
             return Ok(new
             {
@@ -86,20 +61,6 @@ namespace APIsDemo.Controllers.Community
                 Saved = saved
             });
         }
-        #endregion
-
-        #region Feed
-        [HttpGet("feed")]
-        [Authorize]
-        public async Task<IActionResult> GetFeed()
-        {
-            var authorId = GetAuthorId();
-            var authorType = GetAuthorType();
-
-            var feed = await _postService.GetFeedAsync(authorId, authorType);
-            return Ok(feed);
-        }
-
         #endregion
     }
 }

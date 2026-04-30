@@ -1,9 +1,7 @@
 ﻿using APIsDemo.DTOs.Community.Comments;
-using APIsDemo.Services.Interfaces;
+using APIsDemo.Services.Interfaces.Community;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace APIsDemo.Controllers.Community
 {
@@ -19,23 +17,13 @@ namespace APIsDemo.Controllers.Community
             _commentService = commentService;
         }
 
-        private (int AuthorId, string AuthorType) GetAuthor()
-        {
-            return (
-                int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!),
-                User.FindFirstValue("AuthorType")!
-            );
-        }
-
         [HttpPost]
         public async Task<IActionResult> CreateComment( int postId, [FromBody] CreateCommentDto dto)
         {
             if (string.IsNullOrWhiteSpace(dto.Content))
                 return BadRequest("Comment cannot be empty");
 
-            var (authorId, authorType) = GetAuthor();
-
-            var result = await _commentService.CreateAsync(postId, authorId, authorType, dto);
+            var result = await _commentService.CreateAsync(postId, dto);
             return Ok(result);
         }
 

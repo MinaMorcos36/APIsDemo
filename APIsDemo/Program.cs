@@ -2,6 +2,12 @@ using APIsDemo.Models;
 using APIsDemo.Services;
 using APIsDemo.Services.Implementations;
 using APIsDemo.Services.Interfaces;
+using APIsDemo.Services.Implementations.Authentication;
+using APIsDemo.Services.Implementations.Community;
+using APIsDemo.Services.Interfaces.Authentication;
+using APIsDemo.Services.Interfaces.Community;
+using APIsDemo.Services.Interfaces.Admin;
+using APIsDemo.Services.Implementations.Admin;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -72,13 +78,19 @@ builder.Services.AddCors(options =>
         });
 });
 
+builder.Services.AddHttpContextAccessor();
+
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<IPostLikeService, PostLikeService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IPostSaveService, PostSaveService>();
-
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ICompanyService, CompanyService>();
+builder.Services.AddScoped<IJobService, JobService>();
+builder.Services.AddScoped<ICommunityService, CommunityService>();
+builder.Services.AddScoped<IAdminService, AdminService>();
 
 var app = builder.Build();
 
