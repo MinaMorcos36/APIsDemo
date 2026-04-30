@@ -1,16 +1,16 @@
-﻿namespace APIsDemo.Models
+﻿using APIsDemo.Models;
+
+public class ConversationModel
 {
-    public class ConversationModel
-    {
-        public int Id { get; set; }
-        public User User { get; set; }
-        public int? UserId { get; set; } // هنربطه بـ Identity بعدين
+    public int Id { get; set; }
 
-        public string? Title { get; set; }
+    public int UserId { get; set; }   // FK only
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public User User { get; set; }    // navigation
 
-        public List<ChatMessageModel> Messages { get; set; } = new();
+    public string? Title { get; set; }
 
-    }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public List<ChatMessageModel> Messages { get; set; } = new();
 }

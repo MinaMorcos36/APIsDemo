@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace APIsDemo.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260418180620_LinkUserWithCvAndChat")]
-    partial class LinkUserWithCvAndChat
+    [Migration("20260425172042_FixUserRelations")]
+    partial class FixUserRelations
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,16 +27,18 @@ namespace APIsDemo.Migrations
 
             modelBuilder.Entity("APIsDemo.Models.ChatMessageModel", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("ConversationId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("ConversationId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -211,65 +213,6 @@ namespace APIsDemo.Migrations
                     b.HasIndex("IndustryId");
 
                     b.ToTable("CompanyOverviews");
-                });
-
-            modelBuilder.Entity("APIsDemo.Models.ConversationModel", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Title")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("UserId1")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId1");
-
-                    b.ToTable("Conversations");
-                });
-
-            modelBuilder.Entity("APIsDemo.Models.CvModel", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("FileName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Language")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("RawText")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("UserId1")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId1");
-
-                    b.ToTable("Cvs");
                 });
 
             modelBuilder.Entity("APIsDemo.Models.ExternalLogin", b =>
@@ -759,9 +702,66 @@ namespace APIsDemo.Migrations
                     b.ToTable("UserSkill");
                 });
 
+            modelBuilder.Entity("ConversationModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Conversations");
+                });
+
+            modelBuilder.Entity("CvModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RawText")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Cvs");
+                });
+
             modelBuilder.Entity("APIsDemo.Models.ChatMessageModel", b =>
                 {
-                    b.HasOne("APIsDemo.Models.ConversationModel", "Conversation")
+                    b.HasOne("ConversationModel", "Conversation")
                         .WithMany("Messages")
                         .HasForeignKey("ConversationId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -816,28 +816,6 @@ namespace APIsDemo.Migrations
                     b.Navigation("Company");
 
                     b.Navigation("Industry");
-                });
-
-            modelBuilder.Entity("APIsDemo.Models.ConversationModel", b =>
-                {
-                    b.HasOne("APIsDemo.Models.User", "User")
-                        .WithMany("Conversations")
-                        .HasForeignKey("UserId1")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("APIsDemo.Models.CvModel", b =>
-                {
-                    b.HasOne("APIsDemo.Models.User", "User")
-                        .WithMany("Cvs")
-                        .HasForeignKey("UserId1")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("APIsDemo.Models.ExternalLogin", b =>
@@ -965,6 +943,28 @@ namespace APIsDemo.Migrations
                     b.Navigation("Skill");
                 });
 
+            modelBuilder.Entity("ConversationModel", b =>
+                {
+                    b.HasOne("APIsDemo.Models.User", "User")
+                        .WithMany("Conversations")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("CvModel", b =>
+                {
+                    b.HasOne("APIsDemo.Models.User", "User")
+                        .WithMany("Cvs")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("APIsDemo.Models.Comment", b =>
                 {
                     b.Navigation("CommentLikes");
@@ -977,11 +977,6 @@ namespace APIsDemo.Migrations
                     b.Navigation("CompanyOverviews");
 
                     b.Navigation("Jobs");
-                });
-
-            modelBuilder.Entity("APIsDemo.Models.ConversationModel", b =>
-                {
-                    b.Navigation("Messages");
                 });
 
             modelBuilder.Entity("APIsDemo.Models.Industry", b =>
@@ -1029,6 +1024,11 @@ namespace APIsDemo.Migrations
                     b.Navigation("RefreshTokens");
 
                     b.Navigation("UserProfiles");
+                });
+
+            modelBuilder.Entity("ConversationModel", b =>
+                {
+                    b.Navigation("Messages");
                 });
 #pragma warning restore 612, 618
         }

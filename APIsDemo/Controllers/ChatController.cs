@@ -1,11 +1,13 @@
 ﻿using APIsDemo.Models;
 using APIsDemo.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace APIsDemo.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/chat")]
 public class ChatController : ControllerBase
@@ -21,11 +23,16 @@ public class ChatController : ControllerBase
 
     private int GetUserId()
     {
-        return int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrEmpty(userIdClaim))
+            throw new UnauthorizedAccessException("User not authenticated");
+
+        return int.Parse(userIdClaim);
     }
 
     // ============================
-    // 0️⃣ Start Conversation (Manual)
+    // 0️⃣ Start Conversation
     // ============================
     [HttpPost("start")]
     public async Task<IActionResult> StartConversation()
@@ -50,40 +57,35 @@ public class ChatController : ControllerBase
     }
 
     // ============================
-    // 1️⃣ Send Message (Smart)
+    // 1️⃣ Send Message
     // ============================
     [HttpPost("send")]
     public async Task<IActionResult> SendMessage([FromBody] CareerChatRequest request)
     {
+        var userId = GetUserId();
+
         if (string.IsNullOrWhiteSpace(request.Message))
             return BadRequest("Message is required");
-
-        var userId = GetUserId();
 
         var conversation = await _context.Conversations
             .FirstOrDefaultAsync(c => c.Id == request.ConversationId);
 
-        // 🧠 Auto-create conversation if not exists
         if (conversation == null)
         {
             conversation = new ConversationModel
             {
                 UserId = userId,
                 CreatedAt = DateTime.UtcNow,
-                Title = request.Message.Length > 30
-                    ? request.Message.Substring(0, 30)
-                    : request.Message
+                Title = request.Message[..Math.Min(30, request.Message.Length)]
             };
 
             _context.Conversations.Add(conversation);
             await _context.SaveChangesAsync();
         }
 
-        // 🔒 Security check
         if (conversation.UserId != userId)
             return Forbid();
 
-        // 🧠 Get CV text (if provided)
         string? cvText = null;
 
         if (request.CvId.HasValue)
@@ -96,7 +98,7 @@ public class ChatController : ControllerBase
         }
 
         var reply = await _chatService.AskAsync(
-            conversation.Id, // مهم هنا نستخدم ID الحقيقي
+            conversation.Id,
             request.Message,
             cvText
         );
@@ -121,7 +123,7 @@ public class ChatController : ControllerBase
             .FirstOrDefaultAsync(c => c.Id == conversationId);
 
         if (conversation == null)
-            return NotFound("Conversation not found");
+            return NotFound();
 
         if (conversation.UserId != userId)
             return Forbid();

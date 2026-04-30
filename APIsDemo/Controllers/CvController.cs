@@ -1,10 +1,12 @@
 ﻿using APIsDemo.Models;
 using APIsDemo.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
 namespace APIsDemo.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/cv")]
 public class CvController : ControllerBase
@@ -28,7 +30,12 @@ public class CvController : ControllerBase
 
     private int GetUserId()
     {
-        return int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrEmpty(userIdClaim))
+            throw new UnauthorizedAccessException("User not authenticated");
+
+        return int.Parse(userIdClaim);
     }
 
     // ===============================
@@ -65,7 +72,7 @@ public class CvController : ControllerBase
     }
 
     // ===============================
-    // 2️⃣ Upload + Evaluate
+    // 2️⃣ Upload + Evaluate (SAFE)
     // ===============================
     [HttpPost("upload-and-evaluate")]
     [Consumes("multipart/form-data")]
@@ -93,8 +100,18 @@ public class CvController : ControllerBase
 
         var cv = await _cvService.Save(userId, dto.File.FileName, text);
 
-        var evaluation = await _geminiService
-            .EvaluateAsync(cv.RawText, jobDescription);
+        object? evaluation = null;
+        string? aiError = null;
+
+        try
+        {
+            evaluation = await _geminiService
+                .EvaluateAsync(cv.RawText, jobDescription);
+        }
+        catch (Exception)
+        {
+            aiError = "AI service is currently unavailable";
+        }
 
         return Ok(new
         {
@@ -102,9 +119,12 @@ public class CvController : ControllerBase
             cv.FileName,
             cv.Language,
             cv.CreatedAt,
-            Score = evaluation.Score,
-            evaluation.Reason,
-            evaluation.Shortlisted
+
+            Score = evaluation?.GetType().GetProperty("Score")?.GetValue(evaluation),
+            Reason = evaluation?.GetType().GetProperty("Reason")?.GetValue(evaluation),
+            Shortlisted = evaluation?.GetType().GetProperty("Shortlisted")?.GetValue(evaluation),
+
+            AiError = aiError
         });
     }
 
@@ -128,7 +148,7 @@ public class CvController : ControllerBase
     }
 
     // ===============================
-    // 4️⃣ Batch Upload
+    // 4️⃣ Batch Upload (SAFE)
     // ===============================
     [HttpPost("upload-and-evaluate-batch")]
     [Consumes("multipart/form-data")]
@@ -146,36 +166,46 @@ public class CvController : ControllerBase
 
         foreach (var file in dto.Files)
         {
-            string text;
             try
             {
-                text = _fileParsingService.Parse(file);
+                var text = _fileParsingService.Parse(file);
+                var cv = await _cvService.Save(userId, file.FileName, text);
+
+                object? evaluation = null;
+                string? aiError = null;
+
+                try
+                {
+                    evaluation = await _geminiService
+                        .EvaluateAsync(cv.RawText, dto.JobDescription);
+                }
+                catch (Exception)
+                {
+                    aiError = "AI service is currently unavailable";
+                }
+
+                results.Add(new
+                {
+                    cv.Id,
+                    cv.FileName,
+                    cv.Language,
+                    cv.CreatedAt,
+
+                    Score = evaluation?.GetType().GetProperty("Score")?.GetValue(evaluation),
+                    Reason = evaluation?.GetType().GetProperty("Reason")?.GetValue(evaluation),
+                    Shortlisted = evaluation?.GetType().GetProperty("Shortlisted")?.GetValue(evaluation),
+
+                    AiError = aiError
+                });
             }
-            catch (NotSupportedException ex)
+            catch (Exception ex)
             {
                 results.Add(new
                 {
                     FileName = file.FileName,
                     Error = ex.Message
                 });
-                continue;
             }
-
-            var cv = await _cvService.Save(userId, file.FileName, text);
-
-            var evaluation = await _geminiService
-                .EvaluateAsync(cv.RawText, dto.JobDescription);
-
-            results.Add(new
-            {
-                cv.Id,
-                cv.FileName,
-                cv.Language,
-                cv.CreatedAt,
-                Score = evaluation.Score,
-                evaluation.Reason,
-                evaluation.Shortlisted
-            });
         }
 
         return Ok(results);
@@ -207,9 +237,6 @@ public class CvController : ControllerBase
             request.Message,
             cvText);
 
-        return Ok(new
-        {
-            Reply = response
-        });
+        return Ok(new { Reply = response });
     }
 }

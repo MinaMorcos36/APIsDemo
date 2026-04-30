@@ -17,10 +17,10 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-builder.Services.AddSingleton<FileParsingService>();
-builder.Services.AddSingleton<LanguageDetectionService>();
-builder.Services.AddSingleton<CvProcessingService>();
-builder.Services.AddSingleton<GeminiCvEvaluationService>();
+builder.Services.AddScoped<FileParsingService>();
+builder.Services.AddScoped<LanguageDetectionService>();
+builder.Services.AddScoped<CvProcessingService>();
+builder.Services.AddScoped<GeminiCvEvaluationService>();
 builder.Services.AddScoped<CareerChatService>();
 
 
