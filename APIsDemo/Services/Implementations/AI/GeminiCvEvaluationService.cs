@@ -3,7 +3,7 @@ using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using System.Text.Json;
 
-namespace APIsDemo.Services;
+namespace APIsDemo.Services.Implementations.AI;
 
 public class GeminiCvEvaluationService
 {

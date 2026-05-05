@@ -1,4 +1,4 @@
-﻿namespace APIsDemo.Services;
+﻿namespace APIsDemo.Services.Implementations.AI;
 
 public class LanguageDetectionService
 {

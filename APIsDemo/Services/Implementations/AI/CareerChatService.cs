@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 
-namespace APIsDemo.Services;
+namespace APIsDemo.Services.Implementations.AI;
 
 public class CareerChatService
 {

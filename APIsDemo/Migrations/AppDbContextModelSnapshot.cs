@@ -559,6 +559,23 @@ namespace APIsDemo.Migrations
                     b.ToTable("SkillLevels");
                 });
 
+            modelBuilder.Entity("APIsDemo.Models.TaxSetting", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Percentage")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.HasKey("Id")
+                        .HasName("PK_TaxSetting");
+
+                    b.ToTable("TaxSettings");
+                });
+
             modelBuilder.Entity("APIsDemo.Models.User", b =>
                 {
                     b.Property<int>("Id")
@@ -943,7 +960,7 @@ namespace APIsDemo.Migrations
             modelBuilder.Entity("ConversationModel", b =>
                 {
                     b.HasOne("APIsDemo.Models.User", "User")
-                        .WithMany("Conversations")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -954,7 +971,7 @@ namespace APIsDemo.Migrations
             modelBuilder.Entity("CvModel", b =>
                 {
                     b.HasOne("APIsDemo.Models.User", "User")
-                        .WithMany("Cvs")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1012,10 +1029,6 @@ namespace APIsDemo.Migrations
 
             modelBuilder.Entity("APIsDemo.Models.User", b =>
                 {
-                    b.Navigation("Conversations");
-
-                    b.Navigation("Cvs");
-
                     b.Navigation("ExternalLogins");
 
                     b.Navigation("RefreshTokens");

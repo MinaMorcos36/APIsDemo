@@ -4,7 +4,7 @@ using UglyToad.PdfPig;
 using System.Text;
 using UglyToad.PdfPig;
 
-namespace APIsDemo.Services;
+namespace APIsDemo.Services.Implementations.AI;
 
 public class FileParsingService
 {

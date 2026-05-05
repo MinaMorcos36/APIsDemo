@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace APIsDemo.Migrations
 {
     /// <inheritdoc />
-    public partial class FixUserRelations : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -109,6 +109,19 @@ namespace APIsDemo.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK__Skill__3214EC07538B9E39", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TaxSettings",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Percentage = table.Column<decimal>(type: "decimal(5,2)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TaxSetting", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -658,6 +671,9 @@ namespace APIsDemo.Migrations
 
             migrationBuilder.DropTable(
                 name: "RefreshTokens");
+
+            migrationBuilder.DropTable(
+                name: "TaxSettings");
 
             migrationBuilder.DropTable(
                 name: "UserProfiles");

@@ -1,7 +1,7 @@
 ﻿using APIsDemo.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace APIsDemo.Services;
+namespace APIsDemo.Services.Implementations.AI;
 
 public class CvProcessingService
 {

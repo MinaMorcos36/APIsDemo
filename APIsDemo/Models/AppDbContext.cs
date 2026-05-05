@@ -19,9 +19,15 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<CommentLike> CommentLikes { get; set; }
 
+    public virtual DbSet<ChatMessageModel> ChatMessages { get; set; }
+
     public virtual DbSet<Company> Companies { get; set; }
 
     public virtual DbSet<CompanyOverview> CompanyOverviews { get; set; }
+
+    public virtual DbSet<ConversationModel> Conversations { get; set; }
+
+    public virtual DbSet<CvModel> Cvs { get; set; }
 
     public virtual DbSet<ExternalLogin> ExternalLogins { get; set; }
 

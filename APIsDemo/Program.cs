@@ -8,7 +8,10 @@ using APIsDemo.Services.Implementations.Admin;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.Connectors.Google;
 using System.Text;
+using APIsDemo.Services.Implementations.AI;
 
 var builder = WebApplication.CreateBuilder(args);
 

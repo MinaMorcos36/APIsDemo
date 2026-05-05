@@ -1,10 +1,10 @@
 ﻿using APIsDemo.Models;
-using APIsDemo.Services;
+using APIsDemo.Services.Implementations.AI;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace APIsDemo.Controllers;
+namespace APIsDemo.Controllers.AI;
 
 [Authorize]
 [ApiController]
