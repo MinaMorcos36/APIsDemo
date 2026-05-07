@@ -20,7 +20,7 @@ namespace APIsDemo.Services.Implementations.Admin
         {
             var companies = await _context.Companies
                 .AsNoTracking()
-                .Where(c => !c.IsVerified)
+                .Where(c => !c.IsActive)
                 .Select(c => new CompanyAdminDto
                 {
                     Id = c.Id,
@@ -41,10 +41,9 @@ namespace APIsDemo.Services.Implementations.Admin
             var company = await _context.Companies.FirstOrDefaultAsync(c => c.Id == companyId);
             if (company == null) return new NotFoundObjectResult("Company not found.");
 
-            if (company.IsVerified)
-                return new BadRequestObjectResult("Company is already verified.");
+            if (company.IsActive)
+                return new BadRequestObjectResult("Company is already activated.");
 
-            company.IsVerified = true;
             company.IsActive = true;
 
             await _context.SaveChangesAsync();
@@ -60,7 +59,6 @@ namespace APIsDemo.Services.Implementations.Admin
             if (!company.IsVerified && !company.IsActive)
                 return new BadRequestObjectResult("Company is already declined or inactive.");
 
-            company.IsVerified = false;
             company.IsActive = false;
 
             await _context.SaveChangesAsync();

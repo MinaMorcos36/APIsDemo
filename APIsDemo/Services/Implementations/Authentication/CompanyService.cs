@@ -94,6 +94,9 @@ namespace APIsDemo.Services.Implementations.Authentication
 
             if (!company.IsVerified)
                 return new UnauthorizedObjectResult("Email not verified. Please verify your email before login.");
+            
+            if (!company.IsActive)
+                return new UnauthorizedObjectResult("Email not activated. Please wait for admin approval.");
 
             var hasher = new PasswordHasher<Company>();
             var verifyResult = hasher.VerifyHashedPassword(company, company.PasswordHash, dto.Password);
@@ -115,12 +118,12 @@ namespace APIsDemo.Services.Implementations.Authentication
                 return new BadRequestObjectResult("Invalid or expired OTP.");
 
             company.IsVerified = true;
-            company.IsActive = true;
+            company.IsActive = false;
             company.Otp = null;
             company.Otpexpiry = null;
             await _context.SaveChangesAsync();
 
-            return new OkObjectResult("Email verified successfully!");
+            return new OkObjectResult("Email verified successfully! Please Wait for admin approval to login.");
         }
 
         public async Task<IActionResult> UpdateOverviewAsync(UpdateOverviewDto dto)

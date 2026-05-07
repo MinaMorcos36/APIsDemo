@@ -4,6 +4,8 @@ using APIsDemo.Services.Interfaces.Community;
 using Microsoft.EntityFrameworkCore;
 using APIsDemo.Services.Extensions;
 using System.Security.Claims;
+using APIsDemo.Services.Implementations.AI;
+using Microsoft.AspNetCore.Http;
 
 namespace APIsDemo.Services.Implementations.Community
 {
@@ -11,11 +13,22 @@ namespace APIsDemo.Services.Implementations.Community
     {
         private readonly AppDbContext _context;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly FileParsingService _fileParsingService;
+        private readonly CvProcessingService _cvProcessingService;
+        private readonly GeminiCvEvaluationService _geminiService;
 
-        public JobService(AppDbContext context, IHttpContextAccessor httpContextAccessor)
+        public JobService(
+            AppDbContext context,
+            IHttpContextAccessor httpContextAccessor,
+            FileParsingService fileParsingService,
+            CvProcessingService cvProcessingService,
+            GeminiCvEvaluationService geminiService)
         {
             _context = context;
             _httpContextAccessor = httpContextAccessor;
+            _fileParsingService = fileParsingService;
+            _cvProcessingService = cvProcessingService;
+            _geminiService = geminiService;
         }
 
         private int GetAuthorId()
@@ -141,7 +154,8 @@ namespace APIsDemo.Services.Implementations.Community
                     CompanyName = null!,
 
                     ApplicantsCount = j.JobApplications.Count,
-                    IsActive = j.IsActive ?? true
+                    IsActive = j.IsActive ?? true,
+                    JobStatus = (j.IsActive ?? true) ? "Active" : "Canceled"
                 })
                 .ToListAsync();
 
@@ -168,7 +182,7 @@ namespace APIsDemo.Services.Implementations.Community
 
         }
 
-        public async Task ApplyAsync(int jobId)
+        public async Task ApplyAsync(int jobId, ApplyJobDto dto, IFormFile cvFile)
         {
             var authorType = GetAuthorType();
             if (authorType == "Recruiter")
@@ -195,19 +209,61 @@ namespace APIsDemo.Services.Implementations.Community
                 await _context.SaveChangesAsync();
             }
 
+            string text;
+            try
+            {
+                text = _fileParsingService.Parse(cvFile);
+            }
+            catch (NotSupportedException ex)
+            {
+                throw new InvalidOperationException(ex.Message);
+            }
+
+            var uploadsRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "cvs");
+            Directory.CreateDirectory(uploadsRoot);
+            var safeFileName = $"{Guid.NewGuid():N}_{Path.GetFileName(cvFile.FileName)}";
+            var savedPath = Path.Combine(uploadsRoot, safeFileName);
+            await using (var stream = new FileStream(savedPath, FileMode.Create))
+            {
+                await cvFile.CopyToAsync(stream);
+            }
+
+            var cv = await _cvProcessingService.Save(applicantId, cvFile.FileName, text);
+
+            int? score = null;
+            string? reason = null;
+            try
+            {
+                var evaluation = await _geminiService.EvaluateAsync(cv.RawText, job.Description ?? string.Empty);
+                score = evaluation.Score;
+                reason = evaluation.Reason;
+            }
+            catch (Exception)
+            {
+                reason = "AI service is currently unavailable";
+            }
+
             var application = new JobApplication
             {
                 JobId = jobId,
                 ApplicantId = applicantId,
                 StatusId = pendingStatus.Id,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                CvFileName = cvFile.FileName,
+                CvFilePath = savedPath,
+                CvId = cv.Id,
+                CvScore = score,
+                CvScoreReason = reason,
+                CoverLetter = dto.CoverLetter,
+                PhoneNumber = dto.PhoneNumber,
+                PortfolioLink = dto.PortfolioLink
             };
 
             _context.JobApplications.Add(application);
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<JobApplicationDto>> GetApplicationsAsync(int? jobId = null, string? filter = null)
+        public async Task<List<JobApplicationDto>> GetApplicationsAsync(int jobId, string? filter = null, string? sort = null)
         {
             var authorType = GetAuthorType();
             if (authorType != "Recruiter")
@@ -218,24 +274,52 @@ namespace APIsDemo.Services.Implementations.Community
             var query = _context.JobApplications
                 .Include(a => a.Job)
                 .Include(a => a.Status)
+                .Include(a => a.Cv)
                 .AsQueryable();
 
-            query = query.Where(a => a.Job.CompanyId == companyId);
-            if (jobId.HasValue)
-                query = query.Where(a => a.JobId == jobId.Value);
+            query = query.Where(a => a.Job.CompanyId == companyId && a.JobId == jobId);
 
             // Apply applications filter (all/pending/accepted/rejected)
             query = query.ApplyApplicationFilter(filter);
 
+            query = sort switch
+            {
+                "score" => query.OrderByDescending(a => a.CvScore ?? 0).ThenByDescending(a => a.CreatedAt),
+                _ => query.OrderByDescending(a => a.CreatedAt)
+            };
+
             var list = await query
-                .OrderByDescending(a => a.CreatedAt)
                 .Select(a => new JobApplicationDto
                 {
                     Id = a.Id,
                     JobId = a.JobId,
                     JobTitle = a.Job.Title,
+                    JobDescription = a.Job.Description,
+                    JobLocation = a.Job.Location,
+                    CompanyName = _context.CompanyOverviews
+                        .Where(co => co.CompanyId == a.Job.CompanyId)
+                        .Select(co => co.Name)
+                        .FirstOrDefault() ?? string.Empty,
                     ApplicantId = a.ApplicantId,
+                    ApplicantName = (_context.UserProfiles
+                        .Where(p => p.UserId == a.ApplicantId)
+                        .Select(p => (p.FirstName ?? "") + " " + (p.LastName ?? ""))
+                        .FirstOrDefault() ?? string.Empty)
+                        .Trim(),
+                    ApplicantHeadline = _context.UserProfiles
+                        .Where(p => p.UserId == a.ApplicantId)
+                        .Select(p => p.Headline)
+                        .FirstOrDefault() ?? string.Empty,
                     ApplicantEmail = _context.Users.Where(u => u.Id == a.ApplicantId).Select(u => u.Email).FirstOrDefault()!,
+                    CvId = a.CvId,
+                    CvFileName = a.CvFileName,
+                    CvText = a.Cv != null ? a.Cv.RawText : null,
+                    CvLanguage = a.Cv != null ? a.Cv.Language : null,
+                    CvScore = a.CvScore,
+                    CvScoreReason = a.CvScoreReason,
+                    CoverLetter = a.CoverLetter,
+                    PhoneNumber = a.PhoneNumber,
+                    PortfolioLink = a.PortfolioLink,
                     CreatedAt = a.CreatedAt!.Value,
                     StatusId = a.StatusId,
                     StatusName = a.Status.Name ?? string.Empty
@@ -243,6 +327,50 @@ namespace APIsDemo.Services.Implementations.Community
                 .ToListAsync();
 
             return list;
+        }
+
+        public async Task<(byte[] Content, string FileName, string ContentType)> GetApplicationCvFileAsync(int applicationId)
+        {
+            var authorType = GetAuthorType();
+            if (authorType != "Recruiter")
+                throw new UnauthorizedAccessException("Only recruiters can download CVs.");
+
+            var companyId = GetAuthorId();
+
+            var application = await _context.JobApplications
+                .Include(a => a.Job)
+                .Include(a => a.Cv)
+                .FirstOrDefaultAsync(a => a.Id == applicationId);
+
+            if (application == null)
+                throw new KeyNotFoundException("Application not found.");
+
+            if (application.Job.CompanyId != companyId)
+                throw new UnauthorizedAccessException("You are not allowed to access this CV.");
+
+            if (string.IsNullOrWhiteSpace(application.CvFilePath))
+                throw new KeyNotFoundException("CV file not found.");
+
+            if (!File.Exists(application.CvFilePath))
+                throw new FileNotFoundException("CV file not found.");
+
+            var fileName = Path.GetFileName(application.CvFilePath);
+            var content = await File.ReadAllBytesAsync(application.CvFilePath);
+            var contentType = GetContentType(fileName);
+
+            return (content, fileName, contentType);
+        }
+
+        private static string GetContentType(string fileName)
+        {
+            var extension = Path.GetExtension(fileName).ToLowerInvariant();
+            return extension switch
+            {
+                ".pdf" => "application/pdf",
+                ".doc" => "application/msword",
+                ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                _ => "application/octet-stream"
+            };
         }
 
         public async Task<List<JobApplicationDto>> GetMyApplicationsAsync(string? filter = null)
@@ -264,8 +392,30 @@ namespace APIsDemo.Services.Implementations.Community
                     Id = a.Id,
                     JobId = a.JobId,
                     JobTitle = a.Job.Title,
+                    JobDescription = a.Job.Description,
+                    JobLocation = a.Job.Location,
+                    CompanyName = _context.CompanyOverviews
+                        .Where(co => co.CompanyId == a.Job.CompanyId)
+                        .Select(co => co.Name)
+                        .FirstOrDefault() ?? string.Empty,
                     ApplicantId = a.ApplicantId,
+                    ApplicantName = (_context.UserProfiles
+                        .Where(p => p.UserId == a.ApplicantId)
+                        .Select(p => (p.FirstName ?? "") + " " + (p.LastName ?? ""))
+                        .FirstOrDefault() ?? string.Empty)
+                        .Trim(),
+                    ApplicantHeadline = _context.UserProfiles
+                        .Where(p => p.UserId == a.ApplicantId)
+                        .Select(p => p.Headline)
+                        .FirstOrDefault() ?? string.Empty,
                     ApplicantEmail = _context.Users.Where(u => u.Id == a.ApplicantId).Select(u => u.Email).FirstOrDefault()!,
+                    CvId = a.CvId,
+                    CvFileName = a.CvFileName,
+                    CvScore = a.CvScore,
+                    CvScoreReason = a.CvScoreReason,
+                    CoverLetter = a.CoverLetter,
+                    PhoneNumber = a.PhoneNumber,
+                    PortfolioLink = a.PortfolioLink,
                     CreatedAt = a.CreatedAt!.Value,
                     StatusId = a.StatusId,
                     StatusName = a.Status.Name ?? string.Empty

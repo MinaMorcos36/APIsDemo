@@ -13,4 +13,6 @@ public class CvModel
     public string Language { get; set; }
 
     public DateTime CreatedAt { get; set; }
+
+    public ICollection<JobApplication> JobApplications { get; set; } = new List<JobApplication>();
 }
