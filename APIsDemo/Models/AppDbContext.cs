@@ -142,6 +142,10 @@ public partial class AppDbContext : DbContext
             entity.HasKey(e => e.Id).HasName("PK__Applicat__3214EC07AFDDEDF2");
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.PhoneNumber).HasMaxLength(50);
+            entity.Property(e => e.PortfolioLink).HasMaxLength(500);
+            entity.Property(e => e.CvFileName).HasMaxLength(255);
+            entity.Property(e => e.CoverLetter).HasMaxLength(4000);
 
             entity.HasOne(d => d.Job).WithMany(p => p.JobApplications)
                 .OnDelete(DeleteBehavior.ClientSetNull)

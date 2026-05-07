@@ -13,5 +13,6 @@
 
         public int ApplicantsCount { get; set; }
         public bool IsActive { get; set; }
+        public string JobStatus { get; set; } = string.Empty;
     }
 }

@@ -2,6 +2,7 @@ using APIsDemo.DTOs.Community.Jobs;
 using APIsDemo.Services.Interfaces.Community;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 
 namespace APIsDemo.Controllers.Community
 {
@@ -42,17 +43,28 @@ namespace APIsDemo.Controllers.Community
         }
 
         [HttpPost("{jobId}/apply")]
-        public async Task<IActionResult> Apply(int jobId)
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> Apply(int jobId, [FromForm] ApplyJobDto dto, IFormFile cvFile)
         {
-            await _jobService.ApplyAsync(jobId);
+            if (dto == null || cvFile == null || cvFile.Length == 0 || string.IsNullOrWhiteSpace(dto.PhoneNumber))
+                return BadRequest("CV file and phone number are required.");
+
+            await _jobService.ApplyAsync(jobId, dto, cvFile);
             return Ok(new { Message = "Application submitted." });
         }
 
-        [HttpGet("applications")]
-        public async Task<IActionResult> GetApplications([FromQuery] int? jobId, [FromQuery] string? filter)
+        [HttpGet("applications/{jobId}")]
+        public async Task<IActionResult> GetApplications(int jobId, [FromQuery] string? filter, [FromQuery] string? sort)
         {
-            var apps = await _jobService.GetApplicationsAsync(jobId, filter);
+            var apps = await _jobService.GetApplicationsAsync(jobId, filter, sort);
             return Ok(apps);
+        }
+
+        [HttpGet("applications/{id}/cv")]
+        public async Task<IActionResult> DownloadCv(int id)
+        {
+            var (content, fileName, contentType) = await _jobService.GetApplicationCvFileAsync(id);
+            return File(content, contentType, fileName);
         }
 
         [HttpGet("my-applications")]

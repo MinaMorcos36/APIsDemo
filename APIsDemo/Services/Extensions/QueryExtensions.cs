@@ -11,7 +11,7 @@ namespace APIsDemo.Services.Extensions
             return filter?.ToLower() switch
             {
                 "active" => jobs.Where(j => j.IsActive == true),
-                "closed" => jobs.Where(j => j.IsActive == false),
+                "canceled" => jobs.Where(j => j.IsActive == false),
                 _ => jobs
             };
         }
