@@ -5,6 +5,7 @@ using APIsDemo.Services.Interfaces.Authentication;
 using APIsDemo.Services.Interfaces.Community;
 using APIsDemo.Services.Interfaces.Admin;
 using APIsDemo.Services.Implementations.Admin;
+using APIsDemo.Services.Implementations.Finance;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -12,6 +13,7 @@ using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.Google;
 using System.Text;
 using APIsDemo.Services.Implementations.AI;
+using APIsDemo.Services.Interfaces.Finance;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -86,6 +88,7 @@ builder.Services.AddScoped<ICompanyService, CompanyService>();
 builder.Services.AddScoped<IJobService, JobService>();
 builder.Services.AddScoped<ICommunityService, CommunityService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
+builder.Services.AddScoped<ISalaryCalculationService, SalaryCalculationService>();
 
 var app = builder.Build();
 
