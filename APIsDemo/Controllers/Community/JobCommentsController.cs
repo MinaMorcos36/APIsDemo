@@ -1,36 +1,36 @@
-﻿using APIsDemo.DTOs.Community.Comments;
+using APIsDemo.DTOs.Community.Comments;
 using APIsDemo.Services.Interfaces.Community;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace APIsDemo.Controllers.Community
 {
-    [Route("api/posts/{postId}/comments")]
+    [Route("api/jobs/{jobId}/comments")]
     [ApiController]
     [Authorize]
-    public class PostCommentsController : ControllerBase
+    public class JobCommentsController : ControllerBase
     {
         private readonly ICommentService _commentService;
 
-        public PostCommentsController(ICommentService commentService)
+        public JobCommentsController(ICommentService commentService)
         {
             _commentService = commentService;
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreatePostComment(int postId, [FromBody] CreateCommentDto dto)
+        public async Task<IActionResult> CreateJobComment(int jobId, [FromBody] CreateCommentDto dto)
         {
             if (string.IsNullOrWhiteSpace(dto.Content))
                 return BadRequest("Comment cannot be empty");
 
-            var result = await _commentService.CreateAsync(postId, dto);
+            var result = await _commentService.CreateForJobAsync(jobId, dto);
             return Ok(result);
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetPostComments(int postId)
+        public async Task<IActionResult> GetJobComments(int jobId)
         {
-            var comments = await _commentService.GetByPostIdAsync(postId);
+            var comments = await _commentService.GetByJobIdAsync(jobId);
             return Ok(comments);
         }
     }

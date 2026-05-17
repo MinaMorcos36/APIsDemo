@@ -1,6 +1,5 @@
 ﻿using APIsDemo.DTOs.Community.Jobs;
 using APIsDemo.DTOs.Community.Posts;
-using APIsDemo.DTOs.Community.Jobs;
 
 namespace APIsDemo.DTOs.Community.Feed
 {

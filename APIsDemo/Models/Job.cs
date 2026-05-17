@@ -33,4 +33,7 @@ public partial class Job
 
     [InverseProperty("Job")]
     public virtual ICollection<JobApplication> JobApplications { get; set; } = new List<JobApplication>();
+
+    [InverseProperty("Job")]
+    public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
 }

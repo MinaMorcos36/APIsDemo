@@ -35,6 +35,7 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<Job> Jobs { get; set; }
 
+
     public virtual DbSet<JobApplication> JobApplications { get; set; }
 
     public virtual DbSet<JobApplicationStatus> JobApplicationStatuses { get; set; }
@@ -74,8 +75,10 @@ public partial class AppDbContext : DbContext
             entity.HasOne(d => d.ParentComment).WithMany(p => p.InverseParentComment).HasConstraintName("FK__Comment__ParentC__71D1E811");
 
             entity.HasOne(d => d.Post).WithMany(p => p.Comments)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Comment__PostId__70DDC3D8");
+
+            entity.HasOne(d => d.Job).WithMany(p => p.Comments)
+                .HasConstraintName("FK__Comment__JobId__79B8D9E4");
         });
 
         modelBuilder.Entity<CommentLike>(entity =>
@@ -132,6 +135,7 @@ public partial class AppDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Job__CompanyId__628FA481");
         });
+
 
         modelBuilder.Entity<JobApplication>(entity =>
         {

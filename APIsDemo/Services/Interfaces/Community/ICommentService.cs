@@ -6,5 +6,7 @@ namespace APIsDemo.Services.Interfaces.Community
     {
         Task<CommentResponseDto> CreateAsync(int postId, CreateCommentDto dto);
         Task<IEnumerable<CommentDto>> GetByPostIdAsync(int postId);
+        Task<CommentResponseDto> CreateForJobAsync(int jobId, CreateCommentDto dto);
+        Task<IEnumerable<CommentDto>> GetByJobIdAsync(int jobId);
     }
 }
