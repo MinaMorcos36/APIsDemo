@@ -11,7 +11,9 @@ public partial class Comment
     [Key]
     public int Id { get; set; }
 
-    public int PostId { get; set; }
+    public int? PostId { get; set; }
+
+    public int? JobId { get; set; }
 
     public int AuthorId { get; set; }
 
@@ -38,5 +40,9 @@ public partial class Comment
 
     [ForeignKey("PostId")]
     [InverseProperty("Comments")]
-    public virtual Post Post { get; set; } = null!;
+    public virtual Post? Post { get; set; }
+
+    [ForeignKey("JobId")]
+    [InverseProperty("Comments")]
+    public virtual Job? Job { get; set; }
 }

@@ -12,6 +12,7 @@
         public string CompanyName { get; set; } = null!;
 
         public int ApplicantsCount { get; set; }
+        public int CommentsCount { get; set; }
         public bool IsActive { get; set; }
         public string JobStatus { get; set; } = string.Empty;
     }

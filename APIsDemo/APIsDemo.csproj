@@ -28,6 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="DTOs\Community\JobComments\" />
     <Folder Include="Services\Interfaces\AI\" />
   </ItemGroup>
 

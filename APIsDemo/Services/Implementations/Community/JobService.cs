@@ -95,6 +95,7 @@ namespace APIsDemo.Services.Implementations.Community
                     CompanyName = null!,
 
                     ApplicantsCount = j.JobApplications.Count,
+                    CommentsCount = j.Comments.Count,
                     IsAppliedByMe = j.JobApplications.Any(a => a.ApplicantId == authorId),
                     IsActive = j.IsActive ?? true
                 })
@@ -154,6 +155,7 @@ namespace APIsDemo.Services.Implementations.Community
                     CompanyName = null!,
 
                     ApplicantsCount = j.JobApplications.Count,
+                    CommentsCount = j.Comments.Count,
                     IsActive = j.IsActive ?? true,
                     JobStatus = (j.IsActive ?? true) ? "Active" : "Canceled"
                 })
