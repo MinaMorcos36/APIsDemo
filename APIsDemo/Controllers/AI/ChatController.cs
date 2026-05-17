@@ -15,7 +15,9 @@ public class ChatController : ControllerBase
     private readonly CareerChatService _chatService;
     private readonly AppDbContext _context;
 
-    public ChatController(CareerChatService chatService, AppDbContext context)
+    public ChatController(
+        CareerChatService chatService,
+        AppDbContext context)
     {
         _chatService = chatService;
         _context = context;
@@ -31,77 +33,77 @@ public class ChatController : ControllerBase
         return int.Parse(userIdClaim);
     }
 
-    // ============================
-    // 0️⃣ Start Conversation
-    // ============================
-    [HttpPost("start")]
-    public async Task<IActionResult> StartConversation()
-    {
-        var userId = GetUserId();
-
-        var conversation = new ConversationModel
-        {
-            UserId = userId,
-            CreatedAt = DateTime.UtcNow,
-            Title = "New Chat"
-        };
-
-        _context.Conversations.Add(conversation);
-        await _context.SaveChangesAsync();
-
-        return Ok(new
-        {
-            conversation.Id,
-            conversation.Title
-        });
-    }
-
-    // ============================
-    // 1️⃣ Send Message
-    // ============================
-    [HttpPost("send")]
-    public async Task<IActionResult> SendMessage([FromBody] CareerChatRequest request)
+    // =========================================
+    // 1️⃣ Send Message (Main Endpoint)
+    // =========================================
+    [HttpPost]
+    public async Task<IActionResult> SendMessage(
+        [FromBody] CareerChatRequest request)
     {
         var userId = GetUserId();
 
         if (string.IsNullOrWhiteSpace(request.Message))
             return BadRequest("Message is required");
 
-        var conversation = await _context.Conversations
-            .FirstOrDefaultAsync(c => c.Id == request.ConversationId);
+        ConversationModel? conversation = null;
 
-        if (conversation == null)
+        // ===============================
+        // Existing Conversation
+        // ===============================
+        if (request.ConversationId.HasValue)
+        {
+            conversation = await _context.Conversations
+                .FirstOrDefaultAsync(c =>
+                    c.Id == request.ConversationId.Value);
+
+            if (conversation == null)
+                return NotFound("Conversation not found");
+
+            if (conversation.UserId != userId)
+                return Forbid();
+        }
+
+        // ===============================
+        // Create New Conversation
+        // ===============================
+        else
         {
             conversation = new ConversationModel
             {
                 UserId = userId,
                 CreatedAt = DateTime.UtcNow,
-                Title = request.Message[..Math.Min(30, request.Message.Length)]
+                Title = request.Message.Length > 30
+                    ? request.Message.Substring(0, 30)
+                    : request.Message
             };
 
             _context.Conversations.Add(conversation);
             await _context.SaveChangesAsync();
         }
 
-        if (conversation.UserId != userId)
-            return Forbid();
-
+        // ===============================
+        // Get CV Text
+        // ===============================
         string? cvText = null;
 
         if (request.CvId.HasValue)
         {
             var cv = await _context.Cvs
-                .FirstOrDefaultAsync(c => c.Id == request.CvId.Value && c.UserId == userId);
+                .FirstOrDefaultAsync(c =>
+                    c.Id == request.CvId.Value &&
+                    c.UserId == userId);
 
             if (cv != null)
                 cvText = cv.RawText;
         }
 
+        // ===============================
+        // Ask AI
+        // ===============================
         var reply = await _chatService.AskAsync(
             conversation.Id,
             request.Message,
-            cvText
-        );
+            cvText);
 
         return Ok(new
         {
@@ -110,11 +112,12 @@ public class ChatController : ControllerBase
         });
     }
 
-    // ============================
-    // 2️⃣ Get Conversation
-    // ============================
+    // =========================================
+    // 2️⃣ Get Conversation Messages
+    // =========================================
     [HttpGet("{conversationId}")]
-    public async Task<IActionResult> GetConversation(int conversationId)
+    public async Task<IActionResult> GetConversation(
+        int conversationId)
     {
         var userId = GetUserId();
 
@@ -131,10 +134,10 @@ public class ChatController : ControllerBase
         return Ok(conversation);
     }
 
-    // ============================
-    // 3️⃣ My Conversations
-    // ============================
-    [HttpGet("my-conversations")]
+    // =========================================
+    // 3️⃣ Get My Conversations
+    // =========================================
+    [HttpGet]
     public async Task<IActionResult> GetMyConversations()
     {
         var userId = GetUserId();
@@ -151,5 +154,70 @@ public class ChatController : ControllerBase
             .ToListAsync();
 
         return Ok(conversations);
+    }
+
+
+    // =========================================
+    // 4️⃣ General AI Chat
+    // =========================================
+    [HttpPost("general")]
+    public async Task<IActionResult> GeneralChat(
+        [FromBody] CareerChatRequest request)
+    {
+        var userId = GetUserId();
+
+        if (string.IsNullOrWhiteSpace(request.Message))
+            return BadRequest("Message is required");
+
+        ConversationModel? conversation = null;
+
+        // ===============================
+        // Existing Conversation
+        // ===============================
+        if (request.ConversationId.HasValue)
+        {
+            conversation = await _context.Conversations
+                .FirstOrDefaultAsync(c =>
+                    c.Id == request.ConversationId.Value);
+
+            if (conversation == null)
+                return NotFound("Conversation not found");
+
+            if (conversation.UserId != userId)
+                return Forbid();
+        }
+
+        // ===============================
+        // Create New Conversation
+        // ===============================
+        else
+        {
+            conversation = new ConversationModel
+            {
+                UserId = userId,
+                CreatedAt = DateTime.UtcNow,
+                Title = request.Message.Length > 30
+                    ? request.Message[..30]
+                    : request.Message
+            };
+
+            _context.Conversations.Add(conversation);
+            await _context.SaveChangesAsync();
+        }
+
+        // ===============================
+        // Ask AI (بدون CV)
+        // ===============================
+        var reply = await _chatService.AskAsync(
+            conversation.Id,
+            request.Message,
+            null
+        );
+
+        return Ok(new
+        {
+            conversationId = conversation.Id,
+            reply
+        });
     }
 }

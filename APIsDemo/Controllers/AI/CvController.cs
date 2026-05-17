@@ -210,33 +210,5 @@ public class CvController : ControllerBase
 
         return Ok(results);
     }
-
-    // ===============================
-    // 5️⃣ Career Chat
-    // ===============================
-    [HttpPost("career-chat")]
-    public async Task<IActionResult> CareerChat([FromBody] CareerChatRequest request)
-    {
-        var userId = GetUserId();
-
-        if (string.IsNullOrWhiteSpace(request.Message))
-            return BadRequest("Message is required");
-
-        string? cvText = null;
-
-        if (request.CvId.HasValue)
-        {
-            var cv = await _cvService.GetById(request.CvId.Value, userId);
-
-            if (cv != null)
-                cvText = cv.RawText;
-        }
-
-        var response = await _careerChatService.AskAsync(
-            request.ConversationId,
-            request.Message,
-            cvText);
-
-        return Ok(new { Reply = response });
-    }
+   
 }
