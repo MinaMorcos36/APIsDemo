@@ -1,0 +1,20 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
+
+namespace ProGrow.API.Models;
+
+[Index("Name", Name = "UQ__Applicat__737584F615BEDFCC", IsUnique = true)]
+public partial class JobApplicationStatus
+{
+    [Key]
+    public int Id { get; set; }
+
+    [StringLength(50)]
+    public string? Name { get; set; }
+
+    [InverseProperty("Status")]
+    public virtual ICollection<JobApplication> JobApplications { get; set; } = new List<JobApplication>();
+}

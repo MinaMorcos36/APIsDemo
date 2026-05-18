@@ -1,4 +1,4 @@
-# APIsDemo
+# ProGrow.API
 
 ASP.NET Core Web API project for learning and practice.
 
