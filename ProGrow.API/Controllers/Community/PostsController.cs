@@ -35,6 +35,15 @@ namespace ProGrow.API.Controllers.Community
         }
         #endregion
 
+        #region Get Feed
+        [HttpGet("feed")]
+        public async Task<IActionResult> GetFeed([FromQuery] int? page, [FromQuery] int? pageSize)
+        {
+            var feed = await _postService.GetFeedAsync(page, pageSize);
+            return Ok(feed);
+        }
+        #endregion
+
         #region Like Post
         [HttpPost("{postId}/like")]
         public async Task<IActionResult> ToggleLike(int postId)

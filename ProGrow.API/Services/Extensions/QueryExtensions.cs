@@ -27,5 +27,24 @@ namespace ProGrow.API.Services.Extensions
                 _ => jobApplications
             };
         }
+
+        public static IQueryable<T> ApplyPaging<T>(this IQueryable<T> query, int? page, int? pageSize)
+        {
+            if (pageSize == null || pageSize <= 0)
+            {
+                return query;
+            }
+
+            var size = Math.Min(pageSize.Value, 100);
+            var currentPage = page.GetValueOrDefault(1);
+            if (currentPage <= 0)
+            {
+                currentPage = 1;
+            }
+
+            return query
+                .Skip((currentPage - 1) * size)
+                .Take(size);
+        }
     }
 }

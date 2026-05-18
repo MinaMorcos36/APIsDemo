@@ -27,9 +27,18 @@ namespace ProGrow.API.Services.Implementations.Admin
                     Email = c.Email,
                     IsVerified = c.IsVerified,
                     IsActive = c.IsActive,
-                    Name = _context.CompanyOverviews.Where(o => o.CompanyId == c.Id).Select(o => o.Name).FirstOrDefault(),
-                    Phone = _context.CompanyOverviews.Where(o => o.CompanyId == c.Id).Select(o => o.Phone).FirstOrDefault(),
-                    WebsiteUrl = _context.CompanyOverviews.Where(o => o.CompanyId == c.Id).Select(o => o.WebsiteUrl).FirstOrDefault()
+                    Name = _context.CompanyOverviews
+                        .Where(o => o.CompanyId == c.Id)
+                        .Select(o => o.Name)
+                        .FirstOrDefault(),
+                    Phone = _context.CompanyOverviews
+                        .Where(o => o.CompanyId == c.Id)
+                        .Select(o => o.Phone)
+                        .FirstOrDefault(),
+                    WebsiteUrl = _context.CompanyOverviews
+                        .Where(o => o.CompanyId == c.Id)
+                        .Select(o => o.WebsiteUrl)
+                        .FirstOrDefault()
                 })
                 .ToListAsync();
 

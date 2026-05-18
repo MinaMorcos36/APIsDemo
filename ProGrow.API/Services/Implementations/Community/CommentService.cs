@@ -71,6 +71,7 @@ namespace ProGrow.API.Services.Implementations.Community
         public async Task<IEnumerable<CommentDto>> GetByPostIdAsync(int postId)
         {
             var comments = await _context.Comments
+                .AsNoTracking()
                 .Where(c => c.PostId == postId && c.ParentCommentId == null)
                 .Include(c => c.InverseParentComment)
                 .OrderBy(c => c.CreatedAt)
@@ -138,6 +139,7 @@ namespace ProGrow.API.Services.Implementations.Community
     public async Task<IEnumerable<CommentDto>> GetByJobIdAsync(int jobId)
     {
         var comments = await _context.Comments
+            .AsNoTracking()
             .Where(c => c.JobId == jobId && c.ParentCommentId == null)
             .Include(c => c.InverseParentComment)
             .OrderBy(c => c.CreatedAt)

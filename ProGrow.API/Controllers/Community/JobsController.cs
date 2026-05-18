@@ -29,16 +29,16 @@ namespace ProGrow.API.Controllers.Community
         }
 
         [HttpGet("feed")]
-        public async Task<IActionResult> GetFeed()
+        public async Task<IActionResult> GetFeed([FromQuery] int? page, [FromQuery] int? pageSize)
         {
-            var feed = await _jobService.GetFeedAsync();
+            var feed = await _jobService.GetFeedAsync(page, pageSize);
             return Ok(feed);
         }
 
         [HttpGet("my-jobs")]
-        public async Task<IActionResult> GetJobs([FromQuery] string? filter)
+        public async Task<IActionResult> GetJobs([FromQuery] string? filter, [FromQuery] int? page, [FromQuery] int? pageSize)
         {
-            var jobs = await _jobService.GetJobsAsync(filter);
+            var jobs = await _jobService.GetJobsAsync(filter, page, pageSize);
             return Ok(jobs);
         }
 
@@ -54,9 +54,9 @@ namespace ProGrow.API.Controllers.Community
         }
 
         [HttpGet("applications/{jobId}")]
-        public async Task<IActionResult> GetApplications(int jobId, [FromQuery] string? filter, [FromQuery] string? sort)
+        public async Task<IActionResult> GetApplications(int jobId, [FromQuery] string? filter, [FromQuery] string? sort, [FromQuery] int? page, [FromQuery] int? pageSize)
         {
-            var apps = await _jobService.GetApplicationsAsync(jobId, filter, sort);
+            var apps = await _jobService.GetApplicationsAsync(jobId, filter, sort, page, pageSize);
             return Ok(apps);
         }
 
@@ -68,9 +68,9 @@ namespace ProGrow.API.Controllers.Community
         }
 
         [HttpGet("my-applications")]
-        public async Task<IActionResult> GetMyApplications([FromQuery] string? filter)
+        public async Task<IActionResult> GetMyApplications([FromQuery] string? filter, [FromQuery] int? page, [FromQuery] int? pageSize)
         {
-            var apps = await _jobService.GetMyApplicationsAsync(filter);
+            var apps = await _jobService.GetMyApplicationsAsync(filter, page, pageSize);
             return Ok(apps);
         }
 

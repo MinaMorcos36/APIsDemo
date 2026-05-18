@@ -4,6 +4,6 @@ namespace ProGrow.API.Services.Interfaces.Community
 {
     public interface ICommunityService
     {
-        Task<List<FeedItemDto>> GetFeedAsync();
+        Task<List<FeedItemDto>> GetFeedAsync(int? page = null, int? pageSize = null);
     }
 }

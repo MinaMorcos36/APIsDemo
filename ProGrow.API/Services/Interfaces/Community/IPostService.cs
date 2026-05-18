@@ -5,6 +5,6 @@ namespace ProGrow.API.Services.Interfaces.Community
     public interface IPostService
     {
         Task<PostResponseDto> CreateAsync(CreatePostDto dto);
-        Task<List<PostFeedDto>> GetFeedAsync();
+        Task<List<PostFeedDto>> GetFeedAsync(int? page = null, int? pageSize = null);
     }
 }

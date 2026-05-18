@@ -16,7 +16,9 @@ namespace ProGrow.API.DTOs.UserProfile
         [MaxLength(100)]
         public string? University { get; set; }
 
+        [Url]
         public string? PictureUrl { get; set; }
+        [Url]
         public string? CvUrl { get; set; }
 
         [MaxLength(60)]
@@ -26,6 +28,7 @@ namespace ProGrow.API.DTOs.UserProfile
         public string? LastName { get; set; }
 
         [MaxLength(50)]
+        [Phone]
         public string? Phone { get; set; }
 
         public DateOnly? Birthdate { get; set; }

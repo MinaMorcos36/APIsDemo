@@ -18,9 +18,9 @@ namespace ProGrow.API.Controllers.Community
 
         [HttpGet("feed")]
         [Authorize]
-        public async Task<IActionResult> GetFeed()
+        public async Task<IActionResult> GetFeed([FromQuery] int? page, [FromQuery] int? pageSize)
         {
-            var feed = await _communityService.GetFeedAsync();
+            var feed = await _communityService.GetFeedAsync(page, pageSize);
             return Ok(feed);
         }
     }

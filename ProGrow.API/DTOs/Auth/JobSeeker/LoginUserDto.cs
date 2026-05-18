@@ -1,9 +1,14 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace ProGrow.API.DTOs.Auth.JobSeeker
 {
     public class LoginUserDto
     {
+        [Required]
+        [EmailAddress]
         public string Email { get; set; }
-        public string Password { get; set; }
 
+        [Required]
+        public string Password { get; set; }
     }
 }

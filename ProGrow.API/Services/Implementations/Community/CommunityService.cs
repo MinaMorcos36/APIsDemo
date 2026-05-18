@@ -20,10 +20,10 @@ namespace ProGrow.API.Services.Implementations.Community
             _jobService = jobService;
         }
 
-        public async Task<List<FeedItemDto>> GetFeedAsync()
+        public async Task<List<FeedItemDto>> GetFeedAsync(int? page = null, int? pageSize = null)
         {
-            var posts = await _postService.GetFeedAsync();
-            var jobs = await _jobService.GetFeedAsync();
+            var posts = await _postService.GetFeedAsync(page, pageSize);
+            var jobs = await _jobService.GetFeedAsync(page, pageSize);
 
             var feed = new List<FeedItemDto>();
 

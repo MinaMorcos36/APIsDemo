@@ -6,11 +6,11 @@ namespace ProGrow.API.Services.Interfaces.Community
     public interface IJobService
     {
         Task<JobResponseDto> CreateAsync(CreateJobDto dto);
-        Task<List<JobFeedDto>> GetFeedAsync();
-        Task<List<CompanysJobDto>> GetJobsAsync(string? filter = null);
+        Task<List<JobFeedDto>> GetFeedAsync(int? page = null, int? pageSize = null);
+        Task<List<CompanysJobDto>> GetJobsAsync(string? filter = null, int? page = null, int? pageSize = null);
         Task ApplyAsync(int jobId, ApplyJobDto dto, IFormFile cvFile);
-        Task<List<JobApplicationDto>> GetApplicationsAsync(int jobId, string? filter = null, string? sort = null);
-        Task<List<JobApplicationDto>> GetMyApplicationsAsync(string? filter = null);
+        Task<List<JobApplicationDto>> GetApplicationsAsync(int jobId, string? filter = null, string? sort = null, int? page = null, int? pageSize = null);
+        Task<List<JobApplicationDto>> GetMyApplicationsAsync(string? filter = null, int? page = null, int? pageSize = null);
         Task<(byte[] Content, string FileName, string ContentType)> GetApplicationCvFileAsync(int applicationId);
         Task ApproveApplicationAsync(int applicationId);
         Task DeclineApplicationAsync(int applicationId);

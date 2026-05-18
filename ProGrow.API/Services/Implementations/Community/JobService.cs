@@ -76,13 +76,15 @@ namespace ProGrow.API.Services.Implementations.Community
             };
         }
 
-        public async Task<List<JobFeedDto>> GetFeedAsync()
+        public async Task<List<JobFeedDto>> GetFeedAsync(int? page = null, int? pageSize = null)
         {
             var authorId = GetAuthorId();
             var authorType = GetAuthorType();
 
             var jobs = await _context.Jobs
+                .AsNoTracking()
                 .OrderByDescending(j => j.CreatedAt)
+                .ApplyPaging(page, pageSize)
                 .Select(j => new JobFeedDto
                 {
                     Id = j.Id,
@@ -92,7 +94,10 @@ namespace ProGrow.API.Services.Implementations.Community
                     CreatedAt = j.CreatedAt!.Value,
 
                     CompanyId = j.CompanyId,
-                    CompanyName = null!,
+                    CompanyName = _context.CompanyOverviews
+                        .Where(co => co.CompanyId == j.CompanyId)
+                        .Select(co => co.Name)
+                        .FirstOrDefault() ?? string.Empty,
 
                     ApplicantsCount = j.JobApplications.Count,
                     CommentsCount = j.Comments.Count,
@@ -101,34 +106,16 @@ namespace ProGrow.API.Services.Implementations.Community
                 })
                 .ToListAsync();
 
-            var companyIds = jobs.Select(j => j.CompanyId).Distinct().ToList();
-
-            var overviews = await _context.CompanyOverviews
-                .Where(co => companyIds.Contains(co.CompanyId))
-                .Select(co => new { co.CompanyId, co.Name })
-                .ToDictionaryAsync(x => x.CompanyId);
-
-            foreach (var job in jobs)
-            {
-                if (overviews.TryGetValue(job.CompanyId, out var ov) && !string.IsNullOrWhiteSpace(ov.Name))
-                {
-                    job.CompanyName = ov.Name;
-                }
-                else
-                {
-                    job.CompanyName = string.Empty;
-                }
-            }
-
             return jobs;
         }
 
-        public async Task<List<CompanysJobDto>> GetJobsAsync(string? filter = null)
+        public async Task<List<CompanysJobDto>> GetJobsAsync(string? filter = null, int? page = null, int? pageSize = null)
         {
             var authorId = GetAuthorId();
             var authorType = GetAuthorType();
             // Build base query over Job entities so we can optionally filter before projection
             var jobsQuery = _context.Jobs
+                .AsNoTracking()
                 .OrderByDescending(j => j.CreatedAt)
                 .AsQueryable();
 
@@ -152,33 +139,18 @@ namespace ProGrow.API.Services.Implementations.Community
                     CreatedAt = j.CreatedAt!.Value,
 
                     CompanyId = j.CompanyId,
-                    CompanyName = null!,
+                    CompanyName = _context.CompanyOverviews
+                        .Where(co => co.CompanyId == j.CompanyId)
+                        .Select(co => co.Name)
+                        .FirstOrDefault() ?? string.Empty,
 
                     ApplicantsCount = j.JobApplications.Count,
                     CommentsCount = j.Comments.Count,
                     IsActive = j.IsActive ?? true,
                     JobStatus = (j.IsActive ?? true) ? "Active" : "Canceled"
                 })
+                .ApplyPaging(page, pageSize)
                 .ToListAsync();
-
-            // Resolve company names for returned jobs
-            var companyIds = jobs.Select(j => j.CompanyId).Distinct().ToList();
-            var overviews = await _context.CompanyOverviews
-                .Where(co => companyIds.Contains(co.CompanyId))
-                .Select(co => new { co.CompanyId, co.Name })
-                .ToDictionaryAsync(x => x.CompanyId);
-
-            foreach (var job in jobs)
-            {
-                if (overviews.TryGetValue(job.CompanyId, out var ov) && !string.IsNullOrWhiteSpace(ov.Name))
-                {
-                    job.CompanyName = ov.Name;
-                }
-                else
-                {
-                    job.CompanyName = string.Empty;
-                }
-            }
 
             return jobs;
 
@@ -265,7 +237,7 @@ namespace ProGrow.API.Services.Implementations.Community
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<JobApplicationDto>> GetApplicationsAsync(int jobId, string? filter = null, string? sort = null)
+        public async Task<List<JobApplicationDto>> GetApplicationsAsync(int jobId, string? filter = null, string? sort = null, int? page = null, int? pageSize = null)
         {
             var authorType = GetAuthorType();
             if (authorType != "Recruiter")
@@ -274,9 +246,9 @@ namespace ProGrow.API.Services.Implementations.Community
             var companyId = GetAuthorId();
 
             var query = _context.JobApplications
+                .AsNoTracking()
                 .Include(a => a.Job)
                 .Include(a => a.Status)
-                .Include(a => a.Cv)
                 .AsQueryable();
 
             query = query.Where(a => a.Job.CompanyId == companyId && a.JobId == jobId);
@@ -315,8 +287,6 @@ namespace ProGrow.API.Services.Implementations.Community
                     ApplicantEmail = _context.Users.Where(u => u.Id == a.ApplicantId).Select(u => u.Email).FirstOrDefault()!,
                     CvId = a.CvId,
                     CvFileName = a.CvFileName,
-                    CvText = a.Cv != null ? a.Cv.RawText : null,
-                    CvLanguage = a.Cv != null ? a.Cv.Language : null,
                     CvScore = a.CvScore,
                     CvScoreReason = a.CvScoreReason,
                     CoverLetter = a.CoverLetter,
@@ -326,6 +296,7 @@ namespace ProGrow.API.Services.Implementations.Community
                     StatusId = a.StatusId,
                     StatusName = a.Status.Name ?? string.Empty
                 })
+                .ApplyPaging(page, pageSize)
                 .ToListAsync();
 
             return list;
@@ -375,7 +346,7 @@ namespace ProGrow.API.Services.Implementations.Community
             };
         }
 
-        public async Task<List<JobApplicationDto>> GetMyApplicationsAsync(string? filter = null)
+        public async Task<List<JobApplicationDto>> GetMyApplicationsAsync(string? filter = null, int? page = null, int? pageSize = null)
         {
             var authorType = GetAuthorType();
             if (authorType == "Recruiter")
@@ -384,6 +355,7 @@ namespace ProGrow.API.Services.Implementations.Community
             var applicantId = GetAuthorId();
 
             var list = await _context.JobApplications
+                .AsNoTracking()
                 .Include(a => a.Job)
                 .Include(a => a.Status)
                 .Where(a => a.ApplicantId == applicantId)
@@ -422,6 +394,7 @@ namespace ProGrow.API.Services.Implementations.Community
                     StatusId = a.StatusId,
                     StatusName = a.Status.Name ?? string.Empty
                 })
+                .ApplyPaging(page, pageSize)
                 .ToListAsync();
 
             return list;

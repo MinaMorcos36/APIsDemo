@@ -1,6 +1,7 @@
 using ProGrow.API.DTOs.Community.Posts;
 using ProGrow.API.Models;
 using ProGrow.API.Services.Interfaces.Community;
+using ProGrow.API.Services.Extensions;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
@@ -50,13 +51,15 @@ namespace ProGrow.API.Services.Implementations.Community
             };
         }
 
-        public async Task<List<PostFeedDto>> GetFeedAsync()
+        public async Task<List<PostFeedDto>> GetFeedAsync(int? page = null, int? pageSize = null)
         {
             var authorId = GetAuthorId();
             var authorType = GetAuthorType();
 
-            var posts = await _context.Posts
+            var query = _context.Posts
+                .AsNoTracking()
                 .OrderByDescending(p => p.CreatedAt)
+                .ApplyPaging(page, pageSize)
                 .Select(p => new PostFeedDto
                 {
                     Id = p.Id,
@@ -64,7 +67,7 @@ namespace ProGrow.API.Services.Implementations.Community
                     CreatedAt = p.CreatedAt!.Value,
 
                     AuthorId = p.AuthorId,
-                    AuthorType = p.AuthorType,
+                    AuthorType = p.AuthorType!,
 
                     LikesCount = p.PostLikes.Count,
                     CommentsCount = p.Comments.Count,
@@ -77,63 +80,20 @@ namespace ProGrow.API.Services.Implementations.Community
                         s.AuthorId == authorId &&
                         s.AuthorType == authorType),
 
-                    AuthorName = null!
-                })
-                .ToListAsync();
-            
-            var userAuthorIds = posts
-                .Where(p => p.AuthorType == "JobSeeker")
-                .Select(p => p.AuthorId)
-                .Distinct()
-                .ToList();
+                    AuthorName = p.AuthorType == "JobSeeker"
+                        ? _context.UserProfiles
+                            .Where(up => up.UserId == p.AuthorId)
+                            .Select(up => ((up.FirstName ?? string.Empty) + " " + (up.LastName ?? string.Empty)).Trim())
+                            .FirstOrDefault() ?? string.Empty
+                        : p.AuthorType == "Recruiter"
+                            ? _context.CompanyOverviews
+                                .Where(co => co.CompanyId == p.AuthorId)
+                                .Select(co => co.Name)
+                                .FirstOrDefault() ?? string.Empty
+                            : string.Empty
+                });
 
-            var companyAuthorIds = posts
-                .Where(p => p.AuthorType == "Recruiter")
-                .Select(p => p.AuthorId)
-                .Distinct()
-                .ToList();
-
-            var userProfiles = await _context.UserProfiles
-                .Where(up => userAuthorIds.Contains(up.UserId))
-                .Select(up => new
-                {
-                    up.UserId,
-                    Name = ((up.FirstName ?? string.Empty) + " " + (up.LastName ?? string.Empty)).Trim()
-                })
-                .ToDictionaryAsync(x => x.UserId);
-
-            var companyOverviews = await _context.CompanyOverviews
-                .Where(co => companyAuthorIds.Contains(co.CompanyId))
-                .Select(co => new
-                {
-                    co.CompanyId,
-                    Name = co.Name ?? string.Empty
-                })
-                .ToDictionaryAsync(x => x.CompanyId);
-
-            foreach (var p in posts)
-            {
-                if (p.AuthorType == "JobSeeker")
-                {
-                    if (userProfiles.TryGetValue(p.AuthorId, out var up) && !string.IsNullOrWhiteSpace(up.Name))
-                        p.AuthorName = up.Name;
-                    else
-                        p.AuthorName = string.Empty;
-                }
-                else if (p.AuthorType == "Recruiter")
-                {
-                    if (companyOverviews.TryGetValue(p.AuthorId, out var co) && !string.IsNullOrWhiteSpace(co.Name))
-                        p.AuthorName = co.Name;
-                    else
-                        p.AuthorName = string.Empty;
-                }
-                else
-                {
-                    p.AuthorName = string.Empty;
-                }
-            }
-
-            return posts;
+            return await query.ToListAsync();
         }
 
     }
