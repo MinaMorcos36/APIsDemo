@@ -11,6 +11,8 @@ namespace ProGrow.API.Services.Interfaces.Authentication
         Task<IActionResult> LoginAsync(LoginCompanyDto dto);
         Task<IActionResult> VerifyEmailAsync(VerifyCompanyEmailDto dto);
         Task<IActionResult> UpdateOverviewAsync(UpdateOverviewDto dto);
+        Task<IActionResult> UploadCompanyPhotoAsync(IFormFile photo);
+        Task<IActionResult> GetCompanyPhotoAsync(int companyId);
         Task<IActionResult> GetOverviewAsync();
         Task<IActionResult> GetSavedPostsAsync();
     }

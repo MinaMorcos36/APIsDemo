@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.StaticFiles;
 
 namespace ProGrow.API.Services.Implementations.Authentication
 {
@@ -19,6 +21,13 @@ namespace ProGrow.API.Services.Implementations.Authentication
         private readonly JwtService _jwt;
         private readonly IEmailService _emailService;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private static readonly HashSet<string> AllowedImageExtensions = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ".png",
+            ".jpg",
+            ".jpeg"
+        };
+        private const long MaxPhotoSizeBytes = 5 * 1024 * 1024;
 
         public UserService(AppDbContext context, JwtService jwt, IEmailService emailService, IHttpContextAccessor httpContextAccessor)
         {
@@ -251,6 +260,113 @@ namespace ProGrow.API.Services.Implementations.Authentication
             return new OkObjectResult("Profile updated successfully");
         }
 
+        public async Task<IActionResult> UploadProfilePhotoAsync(IFormFile photo)
+        {
+            var userId = GetAuthorId();
+            if (userId == null) return new UnauthorizedResult();
+
+            if (photo == null || photo.Length == 0)
+                return new BadRequestObjectResult("Photo is required.");
+
+            if (photo.Length > MaxPhotoSizeBytes)
+                return new BadRequestObjectResult("Max file size is 5 MB.");
+
+            var extension = Path.GetExtension(photo.FileName);
+            if (string.IsNullOrWhiteSpace(extension) || !AllowedImageExtensions.Contains(extension))
+                return new BadRequestObjectResult("Invalid file type. Allowed: png, jpg, jpeg.");
+
+            var profile = await _context.UserProfiles
+                .FirstOrDefaultAsync(p => p.UserId == userId.Value);
+
+            if (profile == null)
+            {
+                profile = new UserProfile
+                {
+                    UserId = userId.Value
+                };
+
+                _context.UserProfiles.Add(profile);
+                await _context.SaveChangesAsync();
+            }
+
+            var uploadsRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "photos", "profiles");
+            Directory.CreateDirectory(uploadsRoot);
+
+            var safeFileName = $"{Guid.NewGuid():N}{extension.ToLowerInvariant()}";
+            var savedPath = Path.Combine(uploadsRoot, safeFileName);
+            await using (var stream = new FileStream(savedPath, FileMode.Create))
+            {
+                await photo.CopyToAsync(stream);
+            }
+
+            if (!string.IsNullOrWhiteSpace(profile.PictureUrl))
+            {
+                DeleteExistingPhoto(profile.PictureUrl);
+            }
+
+            var relativeUrl = $"/uploads/photos/profiles/{safeFileName}";
+            profile.PictureUrl = relativeUrl;
+            await _context.SaveChangesAsync();
+
+            return new OkObjectResult(new { PictureUrl = relativeUrl });
+        }
+
+        public async Task<IActionResult> GetUserPhotoAsync(int userId)
+        {
+            var pictureUrl = await _context.UserProfiles
+                .AsNoTracking()
+                .Where(p => p.UserId == userId)
+                .Select(p => p.PictureUrl)
+                .FirstOrDefaultAsync();
+
+            if (string.IsNullOrWhiteSpace(pictureUrl))
+                return new NotFoundObjectResult("Photo not found.");
+
+            return CreatePhotoResult(pictureUrl);
+        }
+
+        private IActionResult CreatePhotoResult(string pictureUrl)
+        {
+            var fullPath = BuildPhotoPath(pictureUrl);
+            if (fullPath == null || !System.IO.File.Exists(fullPath))
+                return new NotFoundObjectResult("Photo not found.");
+
+            var provider = new FileExtensionContentTypeProvider();
+            if (!provider.TryGetContentType(fullPath, out var contentType))
+            {
+                contentType = "application/octet-stream";
+            }
+
+            return new PhysicalFileResult(fullPath, contentType);
+        }
+
+        private void DeleteExistingPhoto(string pictureUrl)
+        {
+            var fullPath = BuildPhotoPath(pictureUrl);
+            if (fullPath != null && System.IO.File.Exists(fullPath))
+            {
+                System.IO.File.Delete(fullPath);
+            }
+        }
+
+        private static string? BuildPhotoPath(string pictureUrl)
+        {
+            var normalized = pictureUrl.Trim();
+            if (!normalized.StartsWith("/", StringComparison.Ordinal))
+            {
+                normalized = "/" + normalized;
+            }
+
+            if (!normalized.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            normalized = normalized.TrimStart('/');
+            normalized = normalized.Replace('/', Path.DirectorySeparatorChar);
+            return Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", normalized);
+        }
+
         public async Task<IActionResult> GetProfileAsync()
         {
             var userId = GetAuthorId();
@@ -321,6 +437,7 @@ namespace ProGrow.API.Services.Implementations.Authentication
                 .AsNoTracking()
                 .Where(s => s.Name.Contains(normalizedQuery))
                 .OrderBy(s => s.Name)
+                .Take(10)
                 .Select(s => new SkillSearchResultDto
                 {
                     Id = s.Id,

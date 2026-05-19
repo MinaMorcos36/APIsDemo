@@ -90,7 +90,19 @@ namespace ProGrow.API.Services.Implementations.Community
                                 .Where(co => co.CompanyId == p.AuthorId)
                                 .Select(co => co.Name)
                                 .FirstOrDefault() ?? string.Empty
-                            : string.Empty
+                            : string.Empty,
+
+                    AuthorPictureUrl = p.AuthorType == "JobSeeker"
+                        ? _context.UserProfiles
+                            .Where(up => up.UserId == p.AuthorId)
+                            .Select(up => up.PictureUrl)
+                            .FirstOrDefault()
+                        : p.AuthorType == "Recruiter"
+                            ? _context.CompanyOverviews
+                                .Where(co => co.CompanyId == p.AuthorId)
+                                .Select(co => co.PictureUrl)
+                                .FirstOrDefault()
+                            : null
                 });
 
             return await query.ToListAsync();

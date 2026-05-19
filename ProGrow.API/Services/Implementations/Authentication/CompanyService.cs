@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.StaticFiles;
 
 namespace ProGrow.API.Services.Implementations.Authentication
 {
@@ -16,6 +18,13 @@ namespace ProGrow.API.Services.Implementations.Authentication
         private readonly JwtService _jwt;
         private readonly IEmailService _emailService;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private static readonly HashSet<string> AllowedImageExtensions = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ".png",
+            ".jpg",
+            ".jpeg"
+        };
+        private const long MaxPhotoSizeBytes = 5 * 1024 * 1024;
 
         public CompanyService(AppDbContext context, JwtService jwt, IEmailService emailService, IHttpContextAccessor httpContextAccessor)
         {
@@ -169,6 +178,113 @@ namespace ProGrow.API.Services.Implementations.Authentication
             await _context.SaveChangesAsync();
 
             return new OkObjectResult("Overview updated successfully");
+        }
+
+        public async Task<IActionResult> UploadCompanyPhotoAsync(IFormFile photo)
+        {
+            var companyId = GetCompanyId();
+            if (companyId == null) return new UnauthorizedResult();
+
+            if (photo == null || photo.Length == 0)
+                return new BadRequestObjectResult("Photo is required.");
+
+            if (photo.Length > MaxPhotoSizeBytes)
+                return new BadRequestObjectResult("Max file size is 5 MB.");
+
+            var extension = Path.GetExtension(photo.FileName);
+            if (string.IsNullOrWhiteSpace(extension) || !AllowedImageExtensions.Contains(extension))
+                return new BadRequestObjectResult("Invalid file type. Allowed: png, jpg, jpeg.");
+
+            var overview = await _context.CompanyOverviews
+                .FirstOrDefaultAsync(o => o.CompanyId == companyId.Value);
+
+            if (overview == null)
+            {
+                overview = new CompanyOverview
+                {
+                    CompanyId = companyId.Value
+                };
+
+                _context.CompanyOverviews.Add(overview);
+                await _context.SaveChangesAsync();
+            }
+
+            var uploadsRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "photos", "companies");
+            Directory.CreateDirectory(uploadsRoot);
+
+            var safeFileName = $"{Guid.NewGuid():N}{extension.ToLowerInvariant()}";
+            var savedPath = Path.Combine(uploadsRoot, safeFileName);
+            await using (var stream = new FileStream(savedPath, FileMode.Create))
+            {
+                await photo.CopyToAsync(stream);
+            }
+
+            if (!string.IsNullOrWhiteSpace(overview.PictureUrl))
+            {
+                DeleteExistingPhoto(overview.PictureUrl);
+            }
+
+            var relativeUrl = $"/uploads/photos/companies/{safeFileName}";
+            overview.PictureUrl = relativeUrl;
+            await _context.SaveChangesAsync();
+
+            return new OkObjectResult(new { PictureUrl = relativeUrl });
+        }
+
+        public async Task<IActionResult> GetCompanyPhotoAsync(int companyId)
+        {
+            var pictureUrl = await _context.CompanyOverviews
+                .AsNoTracking()
+                .Where(o => o.CompanyId == companyId)
+                .Select(o => o.PictureUrl)
+                .FirstOrDefaultAsync();
+
+            if (string.IsNullOrWhiteSpace(pictureUrl))
+                return new NotFoundObjectResult("Photo not found.");
+
+            return CreatePhotoResult(pictureUrl);
+        }
+
+        private IActionResult CreatePhotoResult(string pictureUrl)
+        {
+            var fullPath = BuildPhotoPath(pictureUrl);
+            if (fullPath == null || !System.IO.File.Exists(fullPath))
+                return new NotFoundObjectResult("Photo not found.");
+
+            var provider = new FileExtensionContentTypeProvider();
+            if (!provider.TryGetContentType(fullPath, out var contentType))
+            {
+                contentType = "application/octet-stream";
+            }
+
+            return new PhysicalFileResult(fullPath, contentType);
+        }
+
+        private void DeleteExistingPhoto(string pictureUrl)
+        {
+            var fullPath = BuildPhotoPath(pictureUrl);
+            if (fullPath != null && System.IO.File.Exists(fullPath))
+            {
+                System.IO.File.Delete(fullPath);
+            }
+        }
+
+        private static string? BuildPhotoPath(string pictureUrl)
+        {
+            var normalized = pictureUrl.Trim();
+            if (!normalized.StartsWith("/", StringComparison.Ordinal))
+            {
+                normalized = "/" + normalized;
+            }
+
+            if (!normalized.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            normalized = normalized.TrimStart('/');
+            normalized = normalized.Replace('/', Path.DirectorySeparatorChar);
+            return Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", normalized);
         }
 
         public async Task<IActionResult> GetOverviewAsync()

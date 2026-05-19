@@ -98,6 +98,10 @@ namespace ProGrow.API.Services.Implementations.Community
                         .Where(co => co.CompanyId == j.CompanyId)
                         .Select(co => co.Name)
                         .FirstOrDefault() ?? string.Empty,
+                    CompanyPictureUrl = _context.CompanyOverviews
+                        .Where(co => co.CompanyId == j.CompanyId)
+                        .Select(co => co.PictureUrl)
+                        .FirstOrDefault(),
 
                     ApplicantsCount = j.JobApplications.Count,
                     CommentsCount = j.Comments.Count,
@@ -143,6 +147,10 @@ namespace ProGrow.API.Services.Implementations.Community
                         .Where(co => co.CompanyId == j.CompanyId)
                         .Select(co => co.Name)
                         .FirstOrDefault() ?? string.Empty,
+                    CompanyPictureUrl = _context.CompanyOverviews
+                        .Where(co => co.CompanyId == j.CompanyId)
+                        .Select(co => co.PictureUrl)
+                        .FirstOrDefault(),
 
                     ApplicantsCount = j.JobApplications.Count,
                     CommentsCount = j.Comments.Count,

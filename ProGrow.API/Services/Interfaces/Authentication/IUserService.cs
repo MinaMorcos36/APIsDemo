@@ -11,6 +11,8 @@ namespace ProGrow.API.Services.Interfaces.Authentication
         Task<IActionResult> GoogleCallbackAsync();
         Task<IActionResult> VerifyEmailAsync(VerifyUserEmailDto dto);
         Task<IActionResult> UpdateProfileAsync(UpdateProfileDto dto);
+        Task<IActionResult> UploadProfilePhotoAsync(IFormFile photo);
+        Task<IActionResult> GetUserPhotoAsync(int userId);
         Task<IActionResult> GetProfileAsync();
         Task<IActionResult> GetSavedPostsAsync();
         Task<IActionResult> SearchSkillsAsync(string query);

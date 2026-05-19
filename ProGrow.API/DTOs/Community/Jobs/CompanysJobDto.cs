@@ -10,6 +10,7 @@ namespace ProGrow.API.DTOs.Community.Jobs
 
         public int CompanyId { get; set; }
         public string CompanyName { get; set; } = null!;
+        public string? CompanyPictureUrl { get; set; }
 
         public int ApplicantsCount { get; set; }
         public int CommentsCount { get; set; }

@@ -72,12 +72,31 @@ namespace ProGrow.API.Controllers.Auth
 
         #endregion
 
+        #region UploadProfilePhoto
+        [Authorize]
+        [HttpPost("me/profile/photo")]
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> UploadProfilePhoto(IFormFile photo)
+        {
+            return await _userService.UploadProfilePhotoAsync(photo);
+        }
+        #endregion
+
         #region GetProfile
         [Authorize]
         [HttpGet("me/profile")]
         public async Task<IActionResult> GetProfile()
         {
             return await _userService.GetProfileAsync();
+        }
+        #endregion
+
+        #region GetProfilePhoto
+        [AllowAnonymous]
+        [HttpGet("{userId}/photo")]
+        public async Task<IActionResult> GetProfilePhoto([FromRoute] int userId)
+        {
+            return await _userService.GetUserPhotoAsync(userId);
         }
         #endregion
 

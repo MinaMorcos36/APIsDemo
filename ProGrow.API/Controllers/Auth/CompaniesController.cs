@@ -50,6 +50,15 @@ namespace ProGrow.API.Controllers.Auth
         }
         #endregion
 
+        #region GetCompanyPhoto
+        [AllowAnonymous]
+        [HttpGet("{companyId}/photo")]
+        public async Task<IActionResult> GetCompanyPhoto([FromRoute] int companyId)
+        {
+            return await _companyService.GetCompanyPhotoAsync(companyId);
+        }
+        #endregion
+
         #region Saved Posts
         [Authorize]
         [HttpGet("SavedPosts")]
@@ -67,6 +76,16 @@ namespace ProGrow.API.Controllers.Auth
             return await _companyService.UpdateOverviewAsync(dto);
         }
 
+        #endregion
+
+        #region UploadCompanyPhoto
+        [Authorize]
+        [HttpPost("me/overview/photo")]
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> UploadCompanyPhoto(IFormFile photo)
+        {
+            return await _companyService.UploadCompanyPhotoAsync(photo);
+        }
         #endregion
     }
 }
