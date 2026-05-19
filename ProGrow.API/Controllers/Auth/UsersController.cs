@@ -89,5 +89,35 @@ namespace ProGrow.API.Controllers.Auth
             return await _userService.GetSavedPostsAsync();
         }
         #endregion
+
+        #region Skills
+        [Authorize]
+        [HttpGet("skills/search")]
+        public async Task<IActionResult> SearchSkills([FromQuery] string query)
+        {
+            return await _userService.SearchSkillsAsync(query);
+        }
+
+        [Authorize]
+        [HttpPost("skills")]
+        public async Task<IActionResult> AddSkill([FromBody] AddUserSkillDto dto)
+        {
+            return await _userService.AddSkillAsync(dto);
+        }
+
+        [Authorize]
+        [HttpGet("skills")]
+        public async Task<IActionResult> GetSkills()
+        {
+            return await _userService.GetUserSkillsAsync();
+        }
+
+        [Authorize]
+        [HttpDelete("skills/{id}")]
+        public async Task<IActionResult> RemoveSkill([FromRoute] int id)
+        {
+            return await _userService.RemoveSkillAsync(id);
+        }
+        #endregion
     }
 }

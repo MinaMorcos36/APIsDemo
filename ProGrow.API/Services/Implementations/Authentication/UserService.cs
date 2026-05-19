@@ -310,6 +310,105 @@ namespace ProGrow.API.Services.Implementations.Authentication
             return new OkObjectResult(savedPosts);
         }
 
+        public async Task<IActionResult> SearchSkillsAsync(string query)
+        {
+            if (string.IsNullOrWhiteSpace(query))
+                return new BadRequestObjectResult("Search query is required.");
+
+            var normalizedQuery = query.Trim();
+
+            var skills = await _context.Skills
+                .AsNoTracking()
+                .Where(s => s.Name.Contains(normalizedQuery))
+                .OrderBy(s => s.Name)
+                .Select(s => new SkillSearchResultDto
+                {
+                    Id = s.Id,
+                    Name = s.Name
+                })
+                .ToListAsync();
+
+            return new OkObjectResult(skills);
+        }
+
+        public async Task<IActionResult> RemoveSkillAsync(int skillId)
+        {
+            var userId = GetAuthorId();
+            if (userId == null) return new UnauthorizedResult();
+
+            if (skillId <= 0)
+                return new BadRequestObjectResult("Invalid skill id.");
+
+            var userSkill = await _context.UserSkills
+                .FirstOrDefaultAsync(us => us.UserId == userId.Value && us.SkillId == skillId);
+
+            if (userSkill == null)
+                return new NotFoundObjectResult("Skill not found in profile.");
+
+            _context.UserSkills.Remove(userSkill);
+            await _context.SaveChangesAsync();
+
+            return new OkObjectResult("Skill removed successfully.");
+        }
+
+        public async Task<IActionResult> AddSkillAsync(AddUserSkillDto dto)
+        {
+            var userId = GetAuthorId();
+            if (userId == null) return new UnauthorizedResult();
+
+            if (dto == null || dto.SkillId <= 0)
+                return new BadRequestObjectResult("Invalid payload.");
+
+            var skillExists = await _context.Skills.AnyAsync(s => s.Id == dto.SkillId);
+            if (!skillExists)
+                return new NotFoundObjectResult("Skill not found.");
+
+            var alreadyAdded = await _context.UserSkills
+                .AnyAsync(us => us.UserId == userId.Value && us.SkillId == dto.SkillId);
+
+            if (alreadyAdded)
+                return new BadRequestObjectResult("Skill already added.");
+
+            var levelId = await _context.SkillLevels
+                .OrderBy(l => l.Id)
+                .Select(l => (int?)l.Id)
+                .FirstOrDefaultAsync();
+
+            if (!levelId.HasValue)
+                return new BadRequestObjectResult("No skill levels are configured.");
+
+            var userSkill = new UserSkill
+            {
+                UserId = userId.Value,
+                SkillId = dto.SkillId,
+                LevelId = levelId.Value
+            };
+
+            _context.UserSkills.Add(userSkill);
+            await _context.SaveChangesAsync();
+
+            return new OkObjectResult("Skill added successfully.");
+        }
+
+        public async Task<IActionResult> GetUserSkillsAsync()
+        {
+            var userId = GetAuthorId();
+            if (userId == null) return new UnauthorizedResult();
+
+            var skills = await _context.UserSkills
+                .AsNoTracking()
+                .Where(us => us.UserId == userId.Value)
+                .Select(us => new UserSkillDto
+                {
+                    Id = us.Skill.Id,
+                    Name = us.Skill.Name
+                })
+                .OrderBy(s => s.Name)
+                .ToListAsync();
+
+            return new OkObjectResult(skills);
+        }
+
         private bool ValidateModel(object dto)
         {
             // minimal placeholder: controller previously relied on ModelState. Keep simple.

@@ -136,5 +136,23 @@ namespace ProGrow.API.Services.Implementations.Admin
             await _context.SaveChangesAsync();
             return new OkObjectResult("Tax updated successfully");
         }
+
+        public async Task<IActionResult> DeleteSkillAsync(int skillId)
+        {
+            var skill = await _context.Skills.FirstOrDefaultAsync(s => s.Id == skillId);
+            if (skill == null) return new NotFoundObjectResult("Skill not found.");
+
+            var userSkills = await _context.UserSkills
+                .Where(us => us.SkillId == skillId)
+                .ToListAsync();
+
+            if (userSkills.Any())
+                _context.UserSkills.RemoveRange(userSkills);
+
+            _context.Skills.Remove(skill);
+            await _context.SaveChangesAsync();
+
+            return new OkObjectResult("Skill deleted successfully.");
+        }
     }
 }

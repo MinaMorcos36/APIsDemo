@@ -52,5 +52,11 @@ namespace ProGrow.API.Controllers.Admin
         {
             return await _adminService.DeclineCompanyAsync(id);
         }
+
+        [HttpDelete("skills/{id}")]
+        public async Task<IActionResult> DeleteSkill([FromRoute] int id)
+        {
+            return await _adminService.DeleteSkillAsync(id);
+        }
     }
 }
