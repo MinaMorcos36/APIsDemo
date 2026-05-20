@@ -208,6 +208,12 @@ namespace ProGrow.API.Services.Implementations.Authentication
             var userId = GetAuthorId();
             if (userId == null) return new UnauthorizedResult();
 
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Id == userId.Value);
+
+            if (user == null)
+                return new NotFoundObjectResult("User not found.");
+
             var profile = await _context.UserProfiles
                 .FirstOrDefaultAsync(p => p.UserId == userId.Value);
 
@@ -245,6 +251,21 @@ namespace ProGrow.API.Services.Implementations.Authentication
 
             if (dto.LastName != null)
                 profile.LastName = dto.LastName;
+
+            if (dto.Email != null)
+            {
+                var normalizedEmail = dto.Email.Trim();
+                if (string.IsNullOrWhiteSpace(normalizedEmail))
+                    return new BadRequestObjectResult("Email is required.");
+
+                var emailInUse = await _context.Users
+                    .AnyAsync(u => u.Email == normalizedEmail && u.Id != userId.Value);
+
+                if (emailInUse)
+                    return new BadRequestObjectResult("Email already registered.");
+
+                user.Email = normalizedEmail;
+            }
 
             if (dto.Phone != null)
                 profile.Phone = dto.Phone;
@@ -372,6 +393,13 @@ namespace ProGrow.API.Services.Implementations.Authentication
             var userId = GetAuthorId();
             if (userId == null) return new UnauthorizedResult();
 
+            var user = await _context.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Id == userId.Value);
+
+            if (user == null)
+                return new NotFoundObjectResult("User not found.");
+
             var profile = await _context.UserProfiles
                 .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.UserId == userId.Value);
@@ -397,6 +425,7 @@ namespace ProGrow.API.Services.Implementations.Authentication
                 CvUrl = profile.Cvurl,
                 FirstName = profile.FirstName,
                 LastName = profile.LastName,
+                Email = user.Email,
                 Phone = profile.Phone,
                 Birthdate = profile.Birthdate,
                 Address = profile.Address

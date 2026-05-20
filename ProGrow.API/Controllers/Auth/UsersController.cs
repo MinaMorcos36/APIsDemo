@@ -82,7 +82,7 @@ namespace ProGrow.API.Controllers.Auth
         }
         #endregion
 
-        #region GetProfile
+        #region GetUserProfile
         [Authorize]
         [HttpGet("me/profile")]
         public async Task<IActionResult> GetProfile()

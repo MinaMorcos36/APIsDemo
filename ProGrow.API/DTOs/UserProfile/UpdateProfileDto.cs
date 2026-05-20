@@ -24,6 +24,10 @@ namespace ProGrow.API.DTOs.UserProfile
         [MaxLength(60)]
         public string? LastName { get; set; }
 
+        [MaxLength(100)]
+        [EmailAddress]
+        public string? Email { get; set; }
+
         [MaxLength(50)]
         [Phone]
         public string? Phone { get; set; }

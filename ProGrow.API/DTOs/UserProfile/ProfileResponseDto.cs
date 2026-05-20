@@ -10,6 +10,7 @@ namespace ProGrow.API.DTOs.UserProfile
         public string? CvUrl { get; set; }
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
+        public string? Email { get; set; }
         public string? Phone { get; set; }
         public DateOnly? Birthdate { get; set; }
         public string? Address { get; set; }
