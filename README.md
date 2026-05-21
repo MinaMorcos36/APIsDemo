@@ -1,6 +1,6 @@
 # ProGrow.API
 
-ASP.NET Core Web API project for learning and practice.
+Graduation project using ASP.NET Core Web API for backend.
 
 ## Tech Stack
 - ASP.NET Core
@@ -8,11 +8,11 @@ ASP.NET Core Web API project for learning and practice.
 - SQL Server
 - JWT Authentication
 - Google OAuth
-- Swagger/Postman
+- Swagger/Postman/Apidog
 
 ## Features
 - User registration & login
-- Google authentication (Needs your credentials, but it's okay if not tested.)
+- Google authentication (Needs credentials)
 - Role-based authorization
 - Sample of CRUD APIs
 
