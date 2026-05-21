@@ -7,3 +7,4 @@ obj/
 appsettings.json
 appsettings.Development.json
 /ProGrow.API/appsettings.example.json
+copilot-instructions.md
