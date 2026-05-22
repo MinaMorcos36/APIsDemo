@@ -455,18 +455,11 @@ namespace ProGrow.API.Services.Implementations.Authentication
             return new OkObjectResult(savedPosts);
         }
 
-        public async Task<IActionResult> SearchSkillsAsync(string query)
+        public async Task<IActionResult> GetSkillsAsync()
         {
-            if (string.IsNullOrWhiteSpace(query))
-                return new BadRequestObjectResult("Search query is required.");
-
-            var normalizedQuery = query.Trim();
-
             var skills = await _context.Skills
                 .AsNoTracking()
-                .Where(s => s.Name.Contains(normalizedQuery))
                 .OrderBy(s => s.Name)
-                .Take(10)
                 .Select(s => new SkillSearchResultDto
                 {
                     Id = s.Id,

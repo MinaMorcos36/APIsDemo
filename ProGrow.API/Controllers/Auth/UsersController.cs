@@ -111,10 +111,10 @@ namespace ProGrow.API.Controllers.Auth
 
         #region Skills
         [Authorize]
-        [HttpGet("skills/search")]
-        public async Task<IActionResult> SearchSkills([FromQuery] string query)
+        [HttpGet("skills")]
+        public async Task<IActionResult> GetSkills()
         {
-            return await _userService.SearchSkillsAsync(query);
+            return await _userService.GetSkillsAsync();
         }
 
         [Authorize]
@@ -125,8 +125,8 @@ namespace ProGrow.API.Controllers.Auth
         }
 
         [Authorize]
-        [HttpGet("skills")]
-        public async Task<IActionResult> GetSkills()
+        [HttpGet("me/skills")]
+        public async Task<IActionResult> GetUserSkills()
         {
             return await _userService.GetUserSkillsAsync();
         }

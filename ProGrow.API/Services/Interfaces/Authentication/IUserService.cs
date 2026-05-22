@@ -15,7 +15,7 @@ namespace ProGrow.API.Services.Interfaces.Authentication
         Task<IActionResult> GetUserPhotoAsync(int userId);
         Task<IActionResult> GetProfileAsync();
         Task<IActionResult> GetSavedPostsAsync();
-        Task<IActionResult> SearchSkillsAsync(string query);
+        Task<IActionResult> GetSkillsAsync();
         Task<IActionResult> AddSkillAsync(AddUserSkillDto dto);
         Task<IActionResult> GetUserSkillsAsync();
         Task<IActionResult> RemoveSkillAsync(int skillId);
