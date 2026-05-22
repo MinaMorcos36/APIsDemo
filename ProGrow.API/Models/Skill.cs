@@ -17,4 +17,7 @@ public partial class Skill
 
     [InverseProperty("Skill")]
     public virtual ICollection<UserSkill> UserSkills { get; set; } = new List<UserSkill>();
+
+    [InverseProperty("Skill")]
+    public virtual ICollection<JobSkill> JobSkills { get; set; } = new List<JobSkill>();
 }

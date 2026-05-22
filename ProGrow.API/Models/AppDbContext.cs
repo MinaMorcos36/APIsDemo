@@ -40,6 +40,12 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<JobApplicationStatus> JobApplicationStatuses { get; set; }
 
+    public virtual DbSet<JobLike> JobLikes { get; set; }
+
+    public virtual DbSet<JobSave> JobSaves { get; set; }
+
+    public virtual DbSet<JobSkill> JobSkills { get; set; }
+
     public virtual DbSet<Post> Posts { get; set; }
 
     public virtual DbSet<PostLike> PostLikes { get; set; }
@@ -130,6 +136,11 @@ public partial class AppDbContext : DbContext
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
             entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.JobType).HasDefaultValueSql("(N'Full-time')");
+            entity.Property(e => e.LocationMode).HasDefaultValueSql("(N'On-site')");
+            entity.Property(e => e.SalaryInInterview).HasDefaultValueSql("((0))");
+            entity.Property(e => e.SalaryFrom).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.SalaryTo).HasColumnType("decimal(18, 2)");
 
             entity.HasOne(d => d.Company).WithMany(p => p.Jobs)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -159,6 +170,39 @@ public partial class AppDbContext : DbContext
         modelBuilder.Entity<JobApplicationStatus>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Applicat__3214EC07739D5A44");
+        });
+
+        modelBuilder.Entity<JobLike>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__JobLikes__3214EC07");
+
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
+
+            entity.HasOne(d => d.Job).WithMany(p => p.JobLikes)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_JobLikes_JobId");
+        });
+
+        modelBuilder.Entity<JobSave>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__JobSaves__3214EC07");
+
+            entity.Property(e => e.SavedAt).HasDefaultValueSql("(getdate())");
+
+            entity.HasOne(d => d.Job).WithMany(p => p.JobSaves)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_JobSaves_JobId");
+        });
+
+        modelBuilder.Entity<JobSkill>(entity =>
+        {
+            entity.HasKey(e => new { e.JobId, e.SkillId }).HasName("PK_JobSkill");
+
+            entity.HasOne(d => d.Job).WithMany(p => p.JobSkills)
+                .HasConstraintName("FK_JobSkill_Job");
+
+            entity.HasOne(d => d.Skill).WithMany(p => p.JobSkills)
+                .HasConstraintName("FK_JobSkill_Skill");
         });
 
         modelBuilder.Entity<Post>(entity =>

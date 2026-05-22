@@ -19,5 +19,6 @@ namespace ProGrow.API.Services.Interfaces.Authentication
         Task<IActionResult> AddSkillAsync(AddUserSkillDto dto);
         Task<IActionResult> GetUserSkillsAsync();
         Task<IActionResult> RemoveSkillAsync(int skillId);
+        Task<IActionResult> LogoutAsync();
     }
 }

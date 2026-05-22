@@ -1,14 +1,15 @@
-using ProGrow.API.DTOs.Auth.Company;
-using ProGrow.API.DTOs.CompanyOverview;
-using ProGrow.API.DTOs.Community;
-using ProGrow.API.Models;
-using ProGrow.API.Services.Interfaces.Authentication;
+using DocumentFormat.OpenXml.Spreadsheet;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.EntityFrameworkCore;
+using ProGrow.API.DTOs.Auth.Company;
+using ProGrow.API.DTOs.Community;
+using ProGrow.API.DTOs.CompanyOverview;
+using ProGrow.API.Models;
+using ProGrow.API.Services.Interfaces.Authentication;
+using System.Security.Claims;
 
 namespace ProGrow.API.Services.Implementations.Authentication
 {
@@ -42,7 +43,7 @@ namespace ProGrow.API.Services.Implementations.Authentication
             return int.Parse(companyId);
         }
 
-        public async Task<IActionResult> RegisterAsync(RegisterCompanyDto dto)
+        public async Task<IActionResult> RegisterAsync(RegisterCompanyDto dto, IFormFile? photo)
         {
             if (!ValidateModel(dto))
                 return new BadRequestObjectResult("Invalid model");
@@ -54,6 +55,32 @@ namespace ProGrow.API.Services.Implementations.Authentication
             if (await _context.UserProfiles.AnyAsync(c => c.Phone == dto.Phone))
             {
                 return new BadRequestObjectResult("Phone already registered.");
+            }
+
+            string? pictureUrl = null;
+            if (photo != null)
+            {
+                if (photo.Length == 0)
+                    return new BadRequestObjectResult("Photo is required.");
+
+                if (photo.Length > MaxPhotoSizeBytes)
+                    return new BadRequestObjectResult("Max file size is 5 MB.");
+
+                var extension = Path.GetExtension(photo.FileName);
+                if (string.IsNullOrWhiteSpace(extension) || !AllowedImageExtensions.Contains(extension))
+                    return new BadRequestObjectResult("Invalid file type. Allowed: png, jpg, jpeg.");
+
+                var uploadsRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "photos", "companies");
+                Directory.CreateDirectory(uploadsRoot);
+
+                var safeFileName = $"{Guid.NewGuid():N}{extension.ToLowerInvariant()}";
+                var savedPath = Path.Combine(uploadsRoot, safeFileName);
+                await using (var stream = new FileStream(savedPath, FileMode.Create))
+                {
+                    await photo.CopyToAsync(stream);
+                }
+
+                pictureUrl = $"/uploads/photos/companies/{safeFileName}";
             }
 
             var company = new Company
@@ -77,7 +104,7 @@ namespace ProGrow.API.Services.Implementations.Authentication
                 Phone = dto.Phone,
                 Address = dto.Address,
                 WebsiteUrl = dto.WebsiteUrl,
-                PictureUrl = dto.PictureUrl
+                PictureUrl = pictureUrl ?? dto.PictureUrl
             };
 
             _context.CompanyOverviews.Add(overview);
@@ -135,10 +162,31 @@ namespace ProGrow.API.Services.Implementations.Authentication
             return new OkObjectResult("Email verified successfully! Please Wait for admin approval to login.");
         }
 
+        public async Task<IActionResult> GetIndustriesAsync()
+        {
+            var industries = await _context.Industries
+                .AsNoTracking()
+                .OrderBy(i => i.Name)
+                .Select(i => new
+                {
+                    i.Id,
+                    i.Name
+                })
+                .ToListAsync();
+
+            return new OkObjectResult(industries);
+        }
+
         public async Task<IActionResult> UpdateOverviewAsync(UpdateOverviewDto dto)
         {
             var companyId = GetCompanyId();
             if (companyId == null) return new UnauthorizedResult();
+
+            var company = await _context.Companies
+                .FirstOrDefaultAsync(c => c.Id == companyId.Value);
+
+            if (company == null)
+                return new NotFoundObjectResult("Company not found.");
 
             var overview = await _context.CompanyOverviews
                 .FirstOrDefaultAsync(o => o.CompanyId == companyId.Value);
@@ -155,10 +203,33 @@ namespace ProGrow.API.Services.Implementations.Authentication
             }
 
             if (dto.IndustryId != null)
+            {
+                var industryExists = await _context.Industries
+                    .AnyAsync(i => i.Id == dto.IndustryId.Value);
+
+                if (!industryExists)
+                    return new BadRequestObjectResult("Invalid industry.");
+
                 overview.IndustryId = dto.IndustryId;
+            }
 
             if (dto.Name != null)
                 overview.Name = dto.Name;
+
+            if (dto.Email != null)
+            {
+                var normalizedEmail = dto.Email.Trim();
+                if (string.IsNullOrWhiteSpace(normalizedEmail))
+                    return new BadRequestObjectResult("Email is required.");
+
+                var emailInUse = await _context.Companies
+                    .AnyAsync(c => c.Email == normalizedEmail && c.Id != companyId.Value);
+
+                if (emailInUse)
+                    return new BadRequestObjectResult("Email already registered.");
+
+                company.Email = normalizedEmail;
+            }
 
             if (dto.Phone != null)
                 overview.Phone = dto.Phone;
@@ -292,6 +363,13 @@ namespace ProGrow.API.Services.Implementations.Authentication
             var companyId = GetCompanyId();
             if (companyId == null) return new UnauthorizedResult();
 
+            var company = await _context.Companies
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Id == companyId.Value);
+
+            if (company == null)
+                return new NotFoundObjectResult("Company not found.");
+
             var overview = await _context.CompanyOverviews
                 .AsNoTracking()
                 .FirstOrDefaultAsync(o => o.CompanyId == companyId.Value);
@@ -307,10 +385,22 @@ namespace ProGrow.API.Services.Implementations.Authentication
                 await _context.SaveChangesAsync();
             }
 
+            string? industryName = null;
+            if (overview.IndustryId.HasValue)
+            {
+                industryName = await _context.Industries
+                    .AsNoTracking()
+                    .Where(i => i.Id == overview.IndustryId.Value)
+                    .Select(i => i.Name)
+                    .FirstOrDefaultAsync();
+            }
+
             var response = new OverviewResponseDto
             {
                 IndustryId = overview.IndustryId,
+                IndustryName = industryName ?? string.Empty,
                 Name = overview.Name,
+                Email = company.Email,
                 Phone = overview.Phone,
                 Address = overview.Address,
                 Overview = overview.Overview,
@@ -340,6 +430,16 @@ namespace ProGrow.API.Services.Implementations.Authentication
                 })
                 .ToListAsync();
             return new OkObjectResult(savedPosts);
+        }
+
+        public Task<IActionResult> LogoutAsync()
+        {
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext == null)
+                return Task.FromResult<IActionResult>(new UnauthorizedResult());
+
+            httpContext.User = new ClaimsPrincipal(new ClaimsIdentity());
+            return Task.FromResult<IActionResult>(new OkObjectResult("Logged out successfully."));
         }
 
         private bool ValidateModel(object dto)

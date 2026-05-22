@@ -8,6 +8,18 @@ namespace ProGrow.API.DTOs.Community.Jobs
         public string JobTitle { get; set; } = string.Empty;
         public string? JobDescription { get; set; }
         public string? JobLocation { get; set; }
+        public string? JobShortDescription { get; set; }
+        public string? JobLocationMode { get; set; }
+        public string? JobType { get; set; }
+        public string? JobCityOffice { get; set; }
+        public decimal? JobSalaryFrom { get; set; }
+        public decimal? JobSalaryTo { get; set; }
+        public bool JobIsSalaryInInterview { get; set; }
+        public string? JobBannerImageUrl { get; set; }
+        public string? JobAboutRole { get; set; }
+        public string? JobResponsibilities { get; set; }
+        public string? JobRequirements { get; set; }
+        public DateTime? JobUpdatedAt { get; set; }
         public string CompanyName { get; set; } = string.Empty;
         public int ApplicantId { get; set; }
         public string ApplicantName { get; set; } = string.Empty;

@@ -8,6 +8,9 @@ namespace ProGrow.API.DTOs.CompanyOverview
         public int? IndustryId { get; set; }
         [MaxLength(50)]
         public string? Name { get; set; }
+        [MaxLength(100)]
+        [EmailAddress]
+        public string? Email { get; set; }
         [MaxLength(30)]
         [Phone]
         public string? Phone { get; set; }
