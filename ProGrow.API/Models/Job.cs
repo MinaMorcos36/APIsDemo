@@ -16,16 +16,39 @@ public partial class Job
     [StringLength(150)]
     public string Title { get; set; } = null!;
 
-    public string? Description { get; set; }
+    [StringLength(100)]
+    public string ShortDescription { get; set; } = null!;
 
-    [StringLength(150)]
-    public string? Location { get; set; }
+    [StringLength(20)]
+    public string LocationMode { get; set; } = null!;
 
-    public DateTime? CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
 
     public DateTime? UpdatedAt { get; set; }
 
-    public bool? IsActive { get; set; }
+    public bool IsActive { get; set; }
+
+    [StringLength(20)]
+    public string JobType { get; set; } = null!;
+
+    [StringLength(150)]
+    public string CityOffice { get; set; } = null!;
+
+    [Column(TypeName = "decimal(18, 2)")]
+    public decimal? SalaryFrom { get; set; }
+
+    [Column(TypeName = "decimal(18, 2)")]
+    public decimal? SalaryTo { get; set; }
+
+    public bool SalaryInInterview { get; set; }
+
+    public string BannerImageUrl { get; set; } = null!;
+
+    public string AboutRole { get; set; } = null!;
+
+    public string Responsibilities { get; set; } = null!;
+
+    public string Requirements { get; set; } = null!;
 
     [ForeignKey("CompanyId")]
     [InverseProperty("Jobs")]
@@ -36,4 +59,13 @@ public partial class Job
 
     [InverseProperty("Job")]
     public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
+
+    [InverseProperty("Job")]
+    public virtual ICollection<JobSkill> JobSkills { get; set; } = new List<JobSkill>();
+
+    [InverseProperty("Job")]
+    public virtual ICollection<JobLike> JobLikes { get; set; } = new List<JobLike>();
+
+    [InverseProperty("Job")]
+    public virtual ICollection<JobSave> JobSaves { get; set; } = new List<JobSave>();
 }

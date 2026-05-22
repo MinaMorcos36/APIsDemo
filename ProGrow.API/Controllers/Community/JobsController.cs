@@ -19,12 +19,16 @@ namespace ProGrow.API.Controllers.Community
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateJob([FromBody] CreateJobDto dto)
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> CreateJob([FromForm] CreateJobDto dto, IFormFile bannerImage)
         {
             if (dto == null || string.IsNullOrWhiteSpace(dto.Title))
                 return BadRequest("Job title is required.");
 
-            var result = await _jobService.CreateAsync(dto);
+            if (bannerImage == null || bannerImage.Length == 0)
+                return BadRequest("Banner image is required.");
+
+            var result = await _jobService.CreateAsync(dto, bannerImage);
             return Ok(result);
         }
 
@@ -33,6 +37,13 @@ namespace ProGrow.API.Controllers.Community
         {
             var feed = await _jobService.GetFeedAsync(page, pageSize);
             return Ok(feed);
+        }
+
+        [HttpGet("{jobId}")]
+        public async Task<IActionResult> GetJobDetails(int jobId)
+        {
+            var job = await _jobService.GetJobDetailsAsync(jobId);
+            return Ok(job);
         }
 
         [HttpGet("my-jobs")]
@@ -56,7 +67,7 @@ namespace ProGrow.API.Controllers.Community
         [HttpGet("applications/{jobId}")]
         public async Task<IActionResult> GetApplications(int jobId, [FromQuery] string? filter, [FromQuery] string? sort, [FromQuery] int? page, [FromQuery] int? pageSize)
         {
-            var apps = await _jobService.GetApplicationsAsync(jobId, filter, sort, page, pageSize);
+            var apps = await _jobService.GetApplicationsAsync(jobId, sort, page, pageSize);
             return Ok(apps);
         }
 
@@ -97,5 +108,6 @@ namespace ProGrow.API.Controllers.Community
             var job = await _jobService.SetActiveAsync(jobId, dto.IsActive);
             return Ok(job);
         }
+
     }
 }

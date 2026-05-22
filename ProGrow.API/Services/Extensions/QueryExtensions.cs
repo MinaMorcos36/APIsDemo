@@ -11,7 +11,7 @@ namespace ProGrow.API.Services.Extensions
             return filter?.ToLower() switch
             {
                 "active" => jobs.Where(j => j.IsActive == true),
-                "canceled" => jobs.Where(j => j.IsActive == false),
+                "closed" => jobs.Where(j => j.IsActive == false),
                 _ => jobs
             };
         }

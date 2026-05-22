@@ -5,14 +5,45 @@ namespace ProGrow.API.DTOs.Community.Jobs
     public class CreateJobDto
     {
         [Required]
-        [StringLength(200, MinimumLength = 1)]
+        [StringLength(150, MinimumLength = 1)]
         [RegularExpression(@".*\S.*")]
-        public string Title { get; set; } = null!;
+        public required string Title { get; set; }
 
-        [StringLength(4000)]
-        public string? Description { get; set; }
+        [Required]
+        [StringLength(100)]
+        public required string ShortDescription { get; set; }
 
-        [StringLength(200)]
-        public string? Location { get; set; }
+        [Required]
+        [StringLength(20)]
+        public required string LocationMode { get; set; }
+
+        [Required]
+        [StringLength(20)]
+        public required string JobType { get; set; }
+
+        [Required]
+        [StringLength(150)]
+        public required string CityOffice { get; set; }
+
+        public decimal? SalaryFrom { get; set; }
+        public decimal? SalaryTo { get; set; }
+
+        [Required]
+        public required bool IsSalaryInInterview { get; set; } = false;
+
+
+        [Required]
+        [StringLength(2000)]
+        public required string AboutRole { get; set; }
+
+        [Required]
+        [StringLength(2000)]
+        public required string Responsibilities { get; set; }
+
+        [Required]
+        [StringLength(2000)]
+        public required string Requirements { get; set; }
+
+        public List<int> RequiredSkillIds { get; set; } = new();
     }
 }

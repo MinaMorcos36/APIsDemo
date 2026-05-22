@@ -477,6 +477,16 @@ namespace ProGrow.API.Services.Implementations.Authentication
             return new OkObjectResult(skills);
         }
 
+        public Task<IActionResult> LogoutAsync()
+        {
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext == null)
+                return Task.FromResult<IActionResult>(new UnauthorizedResult());
+
+            httpContext.User = new ClaimsPrincipal(new ClaimsIdentity());
+            return Task.FromResult<IActionResult>(new OkObjectResult("Logged out successfully."));
+        }
+
         public async Task<IActionResult> RemoveSkillAsync(int skillId)
         {
             var userId = GetAuthorId();

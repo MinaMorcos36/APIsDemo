@@ -16,6 +16,13 @@ namespace ProGrow.API.Services.Implementations.Community
         private readonly FileParsingService _fileParsingService;
         private readonly CvProcessingService _cvProcessingService;
         private readonly GeminiCvEvaluationService _geminiService;
+        private static readonly HashSet<string> AllowedImageExtensions = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ".png",
+            ".jpg",
+            ".jpeg"
+        };
+        private const long MaxPhotoSizeBytes = 5 * 1024 * 1024;
 
         public JobService(
             AppDbContext context,
@@ -41,7 +48,34 @@ namespace ProGrow.API.Services.Implementations.Community
             return _httpContextAccessor.HttpContext!.User.FindFirstValue("AuthorType")!;
         }
 
-        public async Task<JobResponseDto> CreateAsync(CreateJobDto dto)
+        private static string? BuildPhotoPath(string pictureUrl)
+        {
+            var normalized = pictureUrl.Trim();
+            if (!normalized.StartsWith("/", StringComparison.Ordinal))
+            {
+                normalized = "/" + normalized;
+            }
+
+            if (!normalized.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            normalized = normalized.TrimStart('/');
+            normalized = normalized.Replace('/', Path.DirectorySeparatorChar);
+            return Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", normalized);
+        }
+
+        private static void DeleteExistingPhoto(string pictureUrl)
+        {
+            var fullPath = BuildPhotoPath(pictureUrl);
+            if (fullPath != null && File.Exists(fullPath))
+            {
+                File.Delete(fullPath);
+            }
+        }
+
+        public async Task<JobResponseDto> CreateAsync(CreateJobDto dto, IFormFile bannerImage)
         {
             var authorType = GetAuthorType();
             if (authorType != "Recruiter")
@@ -51,12 +85,54 @@ namespace ProGrow.API.Services.Implementations.Community
 
             var companyId = GetAuthorId();
 
+            if (dto.RequiredSkillIds.Any())
+            {
+                var skillIds = await _context.Skills
+                    .Where(s => dto.RequiredSkillIds.Contains(s.Id))
+                    .Select(s => s.Id)
+                    .ToListAsync();
+
+                if (skillIds.Count != dto.RequiredSkillIds.Distinct().Count())
+                    throw new InvalidOperationException("One or more required skills are invalid.");
+            }
+
+            if (bannerImage == null || bannerImage.Length == 0)
+                throw new InvalidOperationException("Banner image is required.");
+
+            if (bannerImage.Length > MaxPhotoSizeBytes)
+                throw new InvalidOperationException("Max file size is 5 MB.");
+
+            var bannerExtension = Path.GetExtension(bannerImage.FileName);
+            if (string.IsNullOrWhiteSpace(bannerExtension) || !AllowedImageExtensions.Contains(bannerExtension))
+                throw new InvalidOperationException("Invalid file type. Allowed: png, jpg, jpeg.");
+
+            var uploadsRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "photos", "jobs");
+            Directory.CreateDirectory(uploadsRoot);
+
+            var safeFileName = $"{Guid.NewGuid():N}{bannerExtension.ToLowerInvariant()}";
+            var savedPath = Path.Combine(uploadsRoot, safeFileName);
+            await using (var stream = new FileStream(savedPath, FileMode.Create))
+            {
+                await bannerImage.CopyToAsync(stream);
+            }
+
+            var relativeUrl = $"/uploads/photos/jobs/{safeFileName}";
+
             var job = new Job
             {
                 CompanyId = companyId,
                 Title = dto.Title,
-                Description = dto.Description,
-                Location = dto.Location,
+                ShortDescription = dto.ShortDescription,
+                LocationMode = dto.LocationMode,
+                JobType = dto.JobType,
+                CityOffice = dto.CityOffice,
+                SalaryFrom = dto.SalaryFrom,
+                SalaryTo = dto.SalaryTo,
+                SalaryInInterview = dto.IsSalaryInInterview,
+                BannerImageUrl = relativeUrl,
+                AboutRole = dto.AboutRole,
+                Responsibilities = dto.Responsibilities,
+                Requirements = dto.Requirements,
                 CreatedAt = DateTime.UtcNow,
                 IsActive = true
             };
@@ -64,15 +140,39 @@ namespace ProGrow.API.Services.Implementations.Community
             _context.Jobs.Add(job);
             await _context.SaveChangesAsync();
 
+            if (dto.RequiredSkillIds.Any())
+            {
+                var jobSkills = dto.RequiredSkillIds
+                    .Distinct()
+                    .Select(skillId => new JobSkill
+                    {
+                        JobId = job.Id,
+                        SkillId = skillId
+                    })
+                    .ToList();
+
+                _context.JobSkills.AddRange(jobSkills);
+                await _context.SaveChangesAsync();
+            }
+
             return new JobResponseDto
             {
                 Id = job.Id,
                 CompanyId = job.CompanyId,
                 Title = job.Title,
-                Description = job.Description,
-                Location = job.Location,
+                ShortDescription = job.ShortDescription,
+                LocationMode = job.LocationMode,
                 CreatedAt = job.CreatedAt,
-                IsActive = true
+                IsActive = true,
+                JobType = dto.JobType,
+                CityOffice = dto.CityOffice,
+                SalaryFrom = dto.SalaryFrom,
+                SalaryTo = dto.SalaryTo,
+                IsSalaryInInterview = dto.IsSalaryInInterview,
+                BannerImageUrl = job.BannerImageUrl,
+                AboutRole = dto.AboutRole,
+                Responsibilities = dto.Responsibilities,
+                Requirements = dto.Requirements,
             };
         }
 
@@ -89,9 +189,21 @@ namespace ProGrow.API.Services.Implementations.Community
                 {
                     Id = j.Id,
                     Title = j.Title,
-                    Description = j.Description,
-                    Location = j.Location,
-                    CreatedAt = j.CreatedAt!.Value,
+                    Description = j.AboutRole,
+                    Location = j.CityOffice,
+                    ShortDescription = j.ShortDescription,
+                    LocationMode = j.LocationMode,
+                    JobType = j.JobType,
+                    CityOffice = j.CityOffice,
+                    SalaryFrom = j.SalaryFrom,
+                    SalaryTo = j.SalaryTo,
+                    IsSalaryInInterview = j.SalaryInInterview,
+                    BannerImageUrl = j.BannerImageUrl,
+                    AboutRole = j.AboutRole,
+                    Responsibilities = j.Responsibilities,
+                    Requirements = j.Requirements,
+                    CreatedAt = j.CreatedAt,
+                    UpdatedAt = j.UpdatedAt,
 
                     CompanyId = j.CompanyId,
                     CompanyName = _context.CompanyOverviews
@@ -103,10 +215,13 @@ namespace ProGrow.API.Services.Implementations.Community
                         .Select(co => co.PictureUrl)
                         .FirstOrDefault(),
 
+                    LikesCount = j.JobLikes.Count,
+                    SavesCount = j.JobSaves.Count,
+
                     ApplicantsCount = j.JobApplications.Count,
                     CommentsCount = j.Comments.Count,
                     IsAppliedByMe = j.JobApplications.Any(a => a.ApplicantId == authorId),
-                    IsActive = j.IsActive ?? true
+                    IsActive = j.IsActive
                 })
                 .ToListAsync();
 
@@ -138,9 +253,21 @@ namespace ProGrow.API.Services.Implementations.Community
                 {
                     Id = j.Id,
                     Title = j.Title,
-                    Description = j.Description,
-                    Location = j.Location,
-                    CreatedAt = j.CreatedAt!.Value,
+                    Description = j.AboutRole,
+                    Location = j.CityOffice,
+                    ShortDescription = j.ShortDescription,
+                    LocationMode = j.LocationMode,
+                    JobType = j.JobType,
+                    CityOffice = j.CityOffice,
+                    SalaryFrom = j.SalaryFrom,
+                    SalaryTo = j.SalaryTo,
+                    IsSalaryInInterview = j.SalaryInInterview,
+                    BannerImageUrl = j.BannerImageUrl,
+                    AboutRole = j.AboutRole,
+                    Responsibilities = j.Responsibilities,
+                    Requirements = j.Requirements,
+                    CreatedAt = j.CreatedAt,
+                    UpdatedAt = j.UpdatedAt,
 
                     CompanyId = j.CompanyId,
                     CompanyName = _context.CompanyOverviews
@@ -152,10 +279,24 @@ namespace ProGrow.API.Services.Implementations.Community
                         .Select(co => co.PictureUrl)
                         .FirstOrDefault(),
 
+                    LikesCount = j.JobLikes.Count,
+                    SavesCount = j.JobSaves.Count,
+                    ApplicantsTotalCount = j.JobApplications.Count,
+                    ApplicantAvatarUrls = j.JobApplications
+                        .OrderByDescending(a => a.CreatedAt)
+                        .Select(a => _context.UserProfiles
+                            .Where(p => p.UserId == a.ApplicantId)
+                            .Select(p => p.PictureUrl)
+                            .FirstOrDefault())
+                        .Where(url => url != null)
+                        .Take(3)
+                        .Select(url => url!)
+                        .ToList(),
+
                     ApplicantsCount = j.JobApplications.Count,
                     CommentsCount = j.Comments.Count,
-                    IsActive = j.IsActive ?? true,
-                    JobStatus = (j.IsActive ?? true) ? "Active" : "Canceled"
+                    IsActive = j.IsActive,
+                    JobStatus = j.IsActive ? "Active" : "Closed"
                 })
                 .ApplyPaging(page, pageSize)
                 .ToListAsync();
@@ -216,7 +357,7 @@ namespace ProGrow.API.Services.Implementations.Community
             string? reason = null;
             try
             {
-                var evaluation = await _geminiService.EvaluateAsync(cv.RawText, job.Description ?? string.Empty);
+                var evaluation = await _geminiService.EvaluateAsync(cv.RawText, job.AboutRole ?? string.Empty);
                 score = evaluation.Score;
                 reason = evaluation.Reason;
             }
@@ -245,7 +386,7 @@ namespace ProGrow.API.Services.Implementations.Community
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<JobApplicationDto>> GetApplicationsAsync(int jobId, string? filter = null, string? sort = null, int? page = null, int? pageSize = null)
+        public async Task<List<JobApplicationDto>> GetApplicationsAsync(int jobId, string? sort = null, int? page = null, int? pageSize = null)
         {
             var authorType = GetAuthorType();
             if (authorType != "Recruiter")
@@ -261,9 +402,6 @@ namespace ProGrow.API.Services.Implementations.Community
 
             query = query.Where(a => a.Job.CompanyId == companyId && a.JobId == jobId);
 
-            // Apply applications filter (all/pending/accepted/rejected)
-            query = query.ApplyApplicationFilter(filter);
-
             query = sort switch
             {
                 "score" => query.OrderByDescending(a => a.CvScore ?? 0).ThenByDescending(a => a.CreatedAt),
@@ -276,8 +414,20 @@ namespace ProGrow.API.Services.Implementations.Community
                     Id = a.Id,
                     JobId = a.JobId,
                     JobTitle = a.Job.Title,
-                    JobDescription = a.Job.Description,
-                    JobLocation = a.Job.Location,
+                    JobDescription = a.Job.AboutRole,
+                    JobLocation = a.Job.CityOffice,
+                    JobShortDescription = a.Job.ShortDescription,
+                    JobLocationMode = a.Job.LocationMode,
+                    JobType = a.Job.JobType,
+                    JobCityOffice = a.Job.CityOffice,
+                    JobSalaryFrom = a.Job.SalaryFrom,
+                    JobSalaryTo = a.Job.SalaryTo,
+                    JobIsSalaryInInterview = a.Job.SalaryInInterview,
+                    JobBannerImageUrl = a.Job.BannerImageUrl,
+                    JobAboutRole = a.Job.AboutRole,
+                    JobResponsibilities = a.Job.Responsibilities,
+                    JobRequirements = a.Job.Requirements,
+                    JobUpdatedAt = a.Job.UpdatedAt,
                     CompanyName = _context.CompanyOverviews
                         .Where(co => co.CompanyId == a.Job.CompanyId)
                         .Select(co => co.Name)
@@ -374,8 +524,20 @@ namespace ProGrow.API.Services.Implementations.Community
                     Id = a.Id,
                     JobId = a.JobId,
                     JobTitle = a.Job.Title,
-                    JobDescription = a.Job.Description,
-                    JobLocation = a.Job.Location,
+                    JobDescription = a.Job.AboutRole,
+                    JobLocation = a.Job.CityOffice,
+                    JobShortDescription = a.Job.ShortDescription,
+                    JobLocationMode = a.Job.LocationMode,
+                    JobType = a.Job.JobType,
+                    JobCityOffice = a.Job.CityOffice,
+                    JobSalaryFrom = a.Job.SalaryFrom,
+                    JobSalaryTo = a.Job.SalaryTo,
+                    JobIsSalaryInInterview = a.Job.SalaryInInterview,
+                    JobBannerImageUrl = a.Job.BannerImageUrl,
+                    JobAboutRole = a.Job.AboutRole,
+                    JobResponsibilities = a.Job.Responsibilities,
+                    JobRequirements = a.Job.Requirements,
+                    JobUpdatedAt = a.Job.UpdatedAt,
                     CompanyName = _context.CompanyOverviews
                         .Where(co => co.CompanyId == a.Job.CompanyId)
                         .Select(co => co.Name)
@@ -470,12 +632,57 @@ namespace ProGrow.API.Services.Implementations.Community
                 Id = job.Id,
                 CompanyId = job.CompanyId,
                 Title = job.Title,
-                Description = job.Description,
-                Location = job.Location,
                 CreatedAt = job.CreatedAt,
                 UpdatedAt = job.UpdatedAt,
-                IsActive = isActive? true : false,
+                IsActive = isActive,
+                ShortDescription = job.ShortDescription,
+                LocationMode = job.LocationMode,
+                JobType = job.JobType,
+                CityOffice = job.CityOffice,
+                SalaryFrom = job.SalaryFrom,
+                SalaryTo = job.SalaryTo,
+                IsSalaryInInterview = job.SalaryInInterview,
+                BannerImageUrl = job.BannerImageUrl,
+                AboutRole = job.AboutRole,
+                Responsibilities = job.Responsibilities,
+                Requirements = job.Requirements,
             };
         }
+
+        public async Task<JobDetailsDto> GetJobDetailsAsync(int jobId)
+        {
+            var job = await _context.Jobs
+                .AsNoTracking()
+                .Include(j => j.JobSkills)
+                .ThenInclude(js => js.Skill)
+                .FirstOrDefaultAsync(j => j.Id == jobId);
+
+            if (job == null)
+                throw new KeyNotFoundException("Job not found.");
+
+            var companyOverview = await _context.CompanyOverviews
+                .AsNoTracking()
+                .FirstOrDefaultAsync(co => co.CompanyId == job.CompanyId);
+
+            return new JobDetailsDto
+            {
+                Id = job.Id,
+                CompanyId = job.CompanyId,
+                CompanyName = companyOverview?.Name ?? string.Empty,
+                CompanyPictureUrl = companyOverview?.PictureUrl,
+                CityOffice = job.CityOffice,
+                Title = job.Title,
+                LocationMode = job.LocationMode,
+                JobType = job.JobType,
+                SalaryFrom = job.SalaryFrom,
+                SalaryTo = job.SalaryTo,
+                IsSalaryInInterview = job.SalaryInInterview,
+                RequiredSkills = job.JobSkills.Select(js => js.Skill.Name).ToList(),
+                AboutRole = job.AboutRole,
+                Responsibilities = job.Responsibilities,
+                Requirements = job.Requirements
+            };
+        }
+
     }
 }

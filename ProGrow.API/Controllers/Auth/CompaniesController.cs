@@ -19,9 +19,10 @@ namespace ProGrow.API.Controllers.Auth
 
         #region Register
         [HttpPost("Register")]
-        public async Task<IActionResult> Register([FromBody] RegisterCompanyDto dto)
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> Register([FromForm] RegisterCompanyDto dto, IFormFile? photo)
         {
-            return await _companyService.RegisterAsync(dto);
+            return await _companyService.RegisterAsync(dto, photo);
         }
         #endregion
 
@@ -38,6 +39,15 @@ namespace ProGrow.API.Controllers.Auth
         public async Task<IActionResult> VerifyEmail([FromBody] VerifyCompanyEmailDto dto)
         {
             return await _companyService.VerifyEmailAsync(dto);
+        }
+        #endregion
+
+        #region GetIndustries
+        [AllowAnonymous]
+        [HttpGet("industries")]
+        public async Task<IActionResult> GetIndustries()
+        {
+            return await _companyService.GetIndustriesAsync();
         }
         #endregion
 
@@ -85,6 +95,15 @@ namespace ProGrow.API.Controllers.Auth
         public async Task<IActionResult> UploadCompanyPhoto(IFormFile photo)
         {
             return await _companyService.UploadCompanyPhotoAsync(photo);
+        }
+        #endregion
+
+        #region Logout
+        [Authorize]
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            return await _companyService.LogoutAsync();
         }
         #endregion
     }

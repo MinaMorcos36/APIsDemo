@@ -138,5 +138,14 @@ namespace ProGrow.API.Controllers.Auth
             return await _userService.RemoveSkillAsync(id);
         }
         #endregion
+
+        #region Logout
+        [Authorize]
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            return await _userService.LogoutAsync();
+        }
+        #endregion
     }
 }
