@@ -10,7 +10,7 @@ public class CvModel
 
     public string FileName { get; set; }
     public string RawText { get; set; }
-    public string Language { get; set; }
+    public string? Language { get; set; }
 
     public DateTime CreatedAt { get; set; }
 
