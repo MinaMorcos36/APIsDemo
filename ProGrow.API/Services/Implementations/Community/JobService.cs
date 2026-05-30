@@ -570,14 +570,14 @@ namespace ProGrow.API.Services.Implementations.Community
             return list;
         }
 
-        public async Task ApproveApplicationAsync(int applicationId)
+        public async Task AcceptApplicationAsync(int applicationId)
         {
-            await UpdateApplicationStatus(applicationId, "Approved");
+            await UpdateApplicationStatus(applicationId, "Accepted");
         }
 
-        public async Task DeclineApplicationAsync(int applicationId)
+        public async Task RejectApplicationAsync(int applicationId)
         {
-            await UpdateApplicationStatus(applicationId, "Declined");
+            await UpdateApplicationStatus(applicationId, "Rejected");
         }
 
         private async Task UpdateApplicationStatus(int applicationId, string targetStatus)

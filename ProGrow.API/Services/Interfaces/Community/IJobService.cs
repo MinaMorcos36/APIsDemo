@@ -12,8 +12,8 @@ namespace ProGrow.API.Services.Interfaces.Community
         Task<List<JobApplicationDto>> GetApplicationsAsync(int jobId, string? sort = null, int? page = null, int? pageSize = null);
         Task<List<JobApplicationDto>> GetMyApplicationsAsync(string? filter = null, int? page = null, int? pageSize = null);
         Task<(byte[] Content, string FileName, string ContentType)> GetApplicationCvFileAsync(int applicationId);
-        Task ApproveApplicationAsync(int applicationId);
-        Task DeclineApplicationAsync(int applicationId);
+        Task AcceptApplicationAsync(int applicationId);
+        Task RejectApplicationAsync(int applicationId);
         Task<JobResponseDto> SetActiveAsync(int jobId, bool isActive);
         Task<JobDetailsDto> GetJobDetailsAsync(int jobId);
     }

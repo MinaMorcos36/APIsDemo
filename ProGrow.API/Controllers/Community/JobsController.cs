@@ -85,18 +85,18 @@ namespace ProGrow.API.Controllers.Community
             return Ok(apps);
         }
 
-        [HttpPost("applications/{id}/approve")]
-        public async Task<IActionResult> Approve(int id)
+        [HttpPost("applications/{id}/accept")]
+        public async Task<IActionResult> Accept(int id)
         {
-            await _jobService.ApproveApplicationAsync(id);
-            return Ok(new { Message = "Application approved." });
+            await _jobService.AcceptApplicationAsync(id);
+            return Ok(new { Message = "Application accepted." });
         }
 
-        [HttpPost("applications/{id}/decline")]
-        public async Task<IActionResult> Decline(int id)
+        [HttpPost("applications/{id}/reject")]
+        public async Task<IActionResult> Reject(int id)
         {
-            await _jobService.DeclineApplicationAsync(id);
-            return Ok(new { Message = "Application declined." });
+            await _jobService.RejectApplicationAsync(id);
+            return Ok(new { Message = "Application rejected." });
         }
 
         [HttpPost("{jobId}/set-active")]
