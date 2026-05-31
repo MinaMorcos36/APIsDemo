@@ -13,4 +13,7 @@ public class ConversationModel
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public List<ChatMessageModel> Messages { get; set; } = new();
+    public int? CvId { get; set; }
+
+    public CvModel? Cv { get; set; }
 }
