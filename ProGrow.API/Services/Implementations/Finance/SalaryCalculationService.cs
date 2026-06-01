@@ -41,10 +41,10 @@ namespace ProGrow.API.Services.Implementations.Finance
             var annualGross = isMonthly ? dto.Amount * 12m : dto.Amount;
             var taxableIncome = Math.Max(0m, annualGross - ExemptionAmount);
             var annualTax = CalculateTax(taxableIncome);
-            var rate = annualGross == 0m ? 0m : (annualTax / annualGross) * 100m;
-            var grossIncome = dto.Amount;
-            var totalTax = isMonthly ? annualTax / 12m : annualTax;
-            var netIncome = grossIncome - totalTax;
+            var rate = annualGross == 0m ? 0m : Math.Round((annualTax / annualGross) * 100m, 2, MidpointRounding.AwayFromZero);
+            var grossIncome = Math.Round(dto.Amount, 2, MidpointRounding.AwayFromZero);
+            var totalTax = Math.Round(isMonthly ? annualTax / 12m : annualTax, 2, MidpointRounding.AwayFromZero);
+            var netIncome = Math.Round(grossIncome - totalTax, 2, MidpointRounding.AwayFromZero);
 
             return new SalaryCalculationResponseDto
             {
