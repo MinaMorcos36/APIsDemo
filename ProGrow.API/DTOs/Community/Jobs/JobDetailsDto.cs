@@ -10,6 +10,8 @@ namespace ProGrow.API.DTOs.Community.Jobs
         public string Title { get; set; } = string.Empty;
         public string LocationMode { get; set; } = string.Empty;
         public string? JobType { get; set; }
+        public int JobCategoryId { get; set; }
+        public string JobCategoryName { get; set; } = string.Empty;
         public decimal? SalaryFrom { get; set; }
         public decimal? SalaryTo { get; set; }
         public bool IsSalaryInInterview { get; set; }

@@ -96,6 +96,12 @@ namespace ProGrow.API.Services.Implementations.Community
                     throw new InvalidOperationException("One or more required skills are invalid.");
             }
 
+            var categoryExists = await _context.JobCategories
+                .AnyAsync(c => c.Id == dto.JobCategoryId);
+
+            if (!categoryExists)
+                throw new InvalidOperationException("Job category is invalid.");
+
             if (bannerImage == null || bannerImage.Length == 0)
                 throw new InvalidOperationException("Banner image is required.");
 
@@ -126,6 +132,7 @@ namespace ProGrow.API.Services.Implementations.Community
                 LocationMode = dto.LocationMode,
                 JobType = dto.JobType,
                 CityOffice = dto.CityOffice,
+                JobCategoryId = dto.JobCategoryId,
                 SalaryFrom = dto.SalaryFrom,
                 SalaryTo = dto.SalaryTo,
                 SalaryInInterview = dto.IsSalaryInInterview,
@@ -166,6 +173,11 @@ namespace ProGrow.API.Services.Implementations.Community
                 IsActive = true,
                 JobType = dto.JobType,
                 CityOffice = dto.CityOffice,
+                JobCategoryId = job.JobCategoryId,
+                JobCategoryName = _context.JobCategories
+                    .Where(c => c.Id == job.JobCategoryId)
+                    .Select(c => c.Name)
+                    .FirstOrDefault() ?? string.Empty,
                 SalaryFrom = dto.SalaryFrom,
                 SalaryTo = dto.SalaryTo,
                 IsSalaryInInterview = dto.IsSalaryInInterview,
@@ -195,6 +207,11 @@ namespace ProGrow.API.Services.Implementations.Community
                     LocationMode = j.LocationMode,
                     JobType = j.JobType,
                     CityOffice = j.CityOffice,
+                    JobCategoryId = j.JobCategoryId,
+                    JobCategoryName = _context.JobCategories
+                        .Where(c => c.Id == j.JobCategoryId)
+                        .Select(c => c.Name)
+                        .FirstOrDefault() ?? string.Empty,
                     SalaryFrom = j.SalaryFrom,
                     SalaryTo = j.SalaryTo,
                     IsSalaryInInterview = j.SalaryInInterview,
@@ -221,11 +238,30 @@ namespace ProGrow.API.Services.Implementations.Community
                     ApplicantsCount = j.JobApplications.Count,
                     CommentsCount = j.Comments.Count,
                     IsAppliedByMe = j.JobApplications.Any(a => a.ApplicantId == authorId),
-                    IsActive = j.IsActive
+                    IsActive = j.IsActive,
+                    IsLikedByMe = j.JobLikes.Any(l => l.AuthorId == authorId && l.AuthorType == authorType),
+                    IsSavedByMe = j.JobSaves.Any(s => s.AuthorId == authorId && s.AuthorType == authorType)
                 })
                 .ToListAsync();
 
             return jobs;
+        }
+
+        public async Task<List<JobCategoryDto>> GetJobCategoriesAsync()
+        {
+            var authorType = GetAuthorType();
+            if (authorType != "Recruiter")
+                throw new UnauthorizedAccessException("Only recruiters can view job categories.");
+
+            return await _context.JobCategories
+                .AsNoTracking()
+                .OrderBy(c => c.Name)
+                .Select(c => new JobCategoryDto
+                {
+                    Id = c.Id,
+                    Name = c.Name
+                })
+                .ToListAsync();
         }
 
         public async Task<List<CompanysJobDto>> GetJobsAsync(string? filter = null, int? page = null, int? pageSize = null)
@@ -259,6 +295,11 @@ namespace ProGrow.API.Services.Implementations.Community
                     LocationMode = j.LocationMode,
                     JobType = j.JobType,
                     CityOffice = j.CityOffice,
+                    JobCategoryId = j.JobCategoryId,
+                    JobCategoryName = _context.JobCategories
+                        .Where(c => c.Id == j.JobCategoryId)
+                        .Select(c => c.Name)
+                        .FirstOrDefault() ?? string.Empty,
                     SalaryFrom = j.SalaryFrom,
                     SalaryTo = j.SalaryTo,
                     IsSalaryInInterview = j.SalaryInInterview,
@@ -282,6 +323,8 @@ namespace ProGrow.API.Services.Implementations.Community
                     LikesCount = j.JobLikes.Count,
                     SavesCount = j.JobSaves.Count,
                     ApplicantsTotalCount = j.JobApplications.Count,
+                    IsLikedByMe = j.JobLikes.Any(l => l.AuthorId == authorId && l.AuthorType == authorType),
+                    IsSavedByMe = j.JobSaves.Any(s => s.AuthorId == authorId && s.AuthorType == authorType),
                     ApplicantAvatarUrls = j.JobApplications
                         .OrderByDescending(a => a.CreatedAt)
                         .Select(a => _context.UserProfiles
@@ -639,6 +682,11 @@ namespace ProGrow.API.Services.Implementations.Community
                 LocationMode = job.LocationMode,
                 JobType = job.JobType,
                 CityOffice = job.CityOffice,
+                JobCategoryId = job.JobCategoryId,
+                JobCategoryName = _context.JobCategories
+                    .Where(c => c.Id == job.JobCategoryId)
+                    .Select(c => c.Name)
+                    .FirstOrDefault() ?? string.Empty,
                 SalaryFrom = job.SalaryFrom,
                 SalaryTo = job.SalaryTo,
                 IsSalaryInInterview = job.SalaryInInterview,
@@ -674,6 +722,11 @@ namespace ProGrow.API.Services.Implementations.Community
                 Title = job.Title,
                 LocationMode = job.LocationMode,
                 JobType = job.JobType,
+                JobCategoryId = job.JobCategoryId,
+                JobCategoryName = _context.JobCategories
+                    .Where(c => c.Id == job.JobCategoryId)
+                    .Select(c => c.Name)
+                    .FirstOrDefault() ?? string.Empty,
                 SalaryFrom = job.SalaryFrom,
                 SalaryTo = job.SalaryTo,
                 IsSalaryInInterview = job.SalaryInInterview,
@@ -682,6 +735,70 @@ namespace ProGrow.API.Services.Implementations.Community
                 Responsibilities = job.Responsibilities,
                 Requirements = job.Requirements
             };
+        }
+
+        public async Task<bool> ToggleLikeAsync(int jobId)
+        {
+            var authorId = GetAuthorId();
+            var authorType = GetAuthorType();
+
+            var jobExists = await _context.Jobs.AnyAsync(j => j.Id == jobId);
+            if (!jobExists)
+                throw new KeyNotFoundException("Job not found.");
+
+            var existingLike = await _context.JobLikes
+                .FirstOrDefaultAsync(jl => jl.JobId == jobId && jl.AuthorId == authorId && jl.AuthorType == authorType);
+
+            if (existingLike != null)
+            {
+                _context.JobLikes.Remove(existingLike);
+                await _context.SaveChangesAsync();
+                return false;
+            }
+
+            var like = new JobLike
+            {
+                JobId = jobId,
+                AuthorId = authorId,
+                AuthorType = authorType,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.JobLikes.Add(like);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> ToggleSaveAsync(int jobId)
+        {
+            var authorId = GetAuthorId();
+            var authorType = GetAuthorType();
+
+            var jobExists = await _context.Jobs.AnyAsync(j => j.Id == jobId);
+            if (!jobExists)
+                throw new KeyNotFoundException("Job not found.");
+
+            var existingSave = await _context.JobSaves
+                .FirstOrDefaultAsync(js => js.JobId == jobId && js.AuthorId == authorId && js.AuthorType == authorType);
+
+            if (existingSave != null)
+            {
+                _context.JobSaves.Remove(existingSave);
+                await _context.SaveChangesAsync();
+                return false;
+            }
+
+            var save = new JobSave
+            {
+                JobId = jobId,
+                AuthorId = authorId,
+                AuthorType = authorType,
+                SavedAt = DateTime.UtcNow
+            };
+
+            _context.JobSaves.Add(save);
+            await _context.SaveChangesAsync();
+            return true;
         }
 
     }

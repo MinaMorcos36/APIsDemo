@@ -50,6 +50,8 @@ public partial class Job
 
     public string Requirements { get; set; } = null!;
 
+    public int JobCategoryId { get; set; }
+
     [ForeignKey("CompanyId")]
     [InverseProperty("Jobs")]
     public virtual Company Company { get; set; } = null!;
@@ -68,4 +70,8 @@ public partial class Job
 
     [InverseProperty("Job")]
     public virtual ICollection<JobSave> JobSaves { get; set; } = new List<JobSave>();
+
+    [ForeignKey("JobCategoryId")]
+    [InverseProperty("Jobs")]
+    public virtual JobCategory JobCategory { get; set; } = null!;
 }

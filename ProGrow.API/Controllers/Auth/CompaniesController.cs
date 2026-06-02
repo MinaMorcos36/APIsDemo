@@ -30,7 +30,15 @@ namespace ProGrow.API.Controllers.Auth
         [HttpPost("Login")]
         public async Task<IActionResult> Login([FromBody] LoginCompanyDto dto)
         {
-            return await _companyService.LoginAsync(dto);
+            try
+            {
+                return await _companyService.LoginAsync(dto);
+            }
+            
+            catch (Exception ex)
+    {
+                return StatusCode(500, ex.ToString());
+            }
         }
         #endregion
 
