@@ -15,6 +15,8 @@ namespace ProGrow.API.DTOs.Community.Jobs
         public bool IsActive { get; set; }
         public required string JobType { get; set; }
         public required string CityOffice { get; set; }
+        public int JobCategoryId { get; set; }
+        public string JobCategoryName { get; set; } = string.Empty;
         public decimal? SalaryFrom { get; set; }
         public decimal? SalaryTo { get; set; }
         public required bool IsSalaryInInterview { get; set; } = false;

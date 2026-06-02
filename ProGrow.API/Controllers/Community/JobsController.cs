@@ -12,10 +12,14 @@ namespace ProGrow.API.Controllers.Community
     public class JobsController : ControllerBase
     {
         private readonly IJobService _jobService;
+        private readonly IJobLikeService _jobLikeService;
+        private readonly IJobSaveService _jobSaveService;
 
-        public JobsController(IJobService jobService)
+        public JobsController(IJobService jobService, IJobLikeService jobLikeService, IJobSaveService jobSaveService)
         {
             _jobService = jobService;
+            _jobLikeService = jobLikeService;
+            _jobSaveService = jobSaveService;
         }
 
         [HttpPost]
@@ -39,6 +43,13 @@ namespace ProGrow.API.Controllers.Community
             return Ok(feed);
         }
 
+        [HttpGet("categories")]
+        public async Task<IActionResult> GetCategories()
+        {
+            var categories = await _jobService.GetJobCategoriesAsync();
+            return Ok(categories);
+        }
+
         [HttpGet("{jobId}")]
         public async Task<IActionResult> GetJobDetails(int jobId)
         {
@@ -46,6 +57,7 @@ namespace ProGrow.API.Controllers.Community
             return Ok(job);
         }
 
+        [Authorize]
         [HttpGet("my-jobs")]
         public async Task<IActionResult> GetJobs([FromQuery] string? filter, [FromQuery] int? page, [FromQuery] int? pageSize)
         {
@@ -107,6 +119,30 @@ namespace ProGrow.API.Controllers.Community
 
             var job = await _jobService.SetActiveAsync(jobId, dto.IsActive);
             return Ok(job);
+        }
+
+        [HttpPost("{jobId}/like")]
+        public async Task<IActionResult> ToggleLike(int jobId)
+        {
+            var liked = await _jobLikeService.ToggleLikeAsync(jobId);
+
+            return Ok(new
+            {
+                JobId = jobId,
+                Liked = liked
+            });
+        }
+
+        [HttpPost("{jobId}/save")]
+        public async Task<IActionResult> ToggleSave(int jobId)
+        {
+            var saved = await _jobSaveService.ToggleSaveAsync(jobId);
+
+            return Ok(new
+            {
+                JobId = jobId,
+                Saved = saved
+            });
         }
 
     }

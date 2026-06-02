@@ -35,12 +35,6 @@ namespace ProGrow.API.Controllers.Admin
             return await _adminService.PostSkillsAsync(dto);
         }
 
-        [HttpPatch("tax")]
-        public async Task<IActionResult> UpdateTax([FromBody] UpdateTaxDto dto)
-        {
-            return await _adminService.UpdateTaxAsync(dto);
-        }
-
         [HttpPatch("companies/{id}/approve")]
         public async Task<IActionResult> ApproveCompany([FromRoute] int id)
         {

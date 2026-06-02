@@ -40,6 +40,8 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<JobApplicationStatus> JobApplicationStatuses { get; set; }
 
+    public virtual DbSet<JobCategory> JobCategories { get; set; }
+
     public virtual DbSet<JobLike> JobLikes { get; set; }
 
     public virtual DbSet<JobSave> JobSaves { get; set; }
@@ -145,6 +147,11 @@ public partial class AppDbContext : DbContext
             entity.HasOne(d => d.Company).WithMany(p => p.Jobs)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Job__CompanyId__628FA481");
+
+            entity.HasOne(d => d.JobCategory)
+                .WithMany(p => p.Jobs)
+                .IsRequired()
+                .HasConstraintName("FK_Jobs_JobCategories");
         });
 
 
@@ -170,6 +177,11 @@ public partial class AppDbContext : DbContext
         modelBuilder.Entity<JobApplicationStatus>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Applicat__3214EC07739D5A44");
+        });
+
+        modelBuilder.Entity<JobCategory>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__JobCategories__3214EC07");
         });
 
         modelBuilder.Entity<JobLike>(entity =>

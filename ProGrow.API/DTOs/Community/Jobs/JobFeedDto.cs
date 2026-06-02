@@ -10,6 +10,8 @@ namespace ProGrow.API.DTOs.Community.Jobs
         public string LocationMode { get; set; } = null!;
         public string JobType { get; set; } = null!;
         public string CityOffice { get; set; } = null!;
+        public int JobCategoryId { get; set; }
+        public string JobCategoryName { get; set; } = string.Empty;
         public decimal? SalaryFrom { get; set; }
         public decimal? SalaryTo { get; set; }
         public bool IsSalaryInInterview { get; set; }
@@ -24,8 +26,10 @@ namespace ProGrow.API.DTOs.Community.Jobs
         public string CompanyName { get; set; } = null!;
         public string? CompanyPictureUrl { get; set; }
 
-    public int LikesCount { get; set; }
-    public int SavesCount { get; set; }
+        public int LikesCount { get; set; }
+        public int SavesCount { get; set; }
+        public bool IsLikedByMe { get; set; }
+        public bool IsSavedByMe { get; set; }
 
         public int ApplicantsCount { get; set; }
         public int CommentsCount { get; set; }

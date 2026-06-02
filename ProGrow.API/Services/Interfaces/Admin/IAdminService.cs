@@ -7,7 +7,6 @@ namespace ProGrow.API.Services.Interfaces.Admin
     {
         Task<IActionResult> GetCompaniesAsync();
         Task<IActionResult> PostSkillsAsync(PostSkillsDto dto);
-        Task<IActionResult> UpdateTaxAsync(UpdateTaxDto dto);
         Task<IActionResult> ApproveCompanyAsync(int companyId);
         Task<IActionResult> DeclineCompanyAsync(int companyId);
         Task<IActionResult> GetSkillsAsync();

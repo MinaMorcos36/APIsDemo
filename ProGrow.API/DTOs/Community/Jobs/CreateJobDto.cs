@@ -25,6 +25,9 @@ namespace ProGrow.API.DTOs.Community.Jobs
         [StringLength(150)]
         public required string CityOffice { get; set; }
 
+        [Required]
+        public int JobCategoryId { get; set; }
+
         public decimal? SalaryFrom { get; set; }
         public decimal? SalaryTo { get; set; }
 

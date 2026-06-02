@@ -118,25 +118,6 @@ namespace ProGrow.API.Services.Implementations.Admin
             return new OkObjectResult(new { Added = toAdd, AlreadyExist = existing });
         }
 
-        public async Task<IActionResult> UpdateTaxAsync(UpdateTaxDto dto)
-        {
-            if (dto == null) return new BadRequestObjectResult("Invalid payload.");
-
-            var tax = await _context.TaxSettings.FirstOrDefaultAsync();
-            if (tax == null)
-            {
-                tax = new TaxSetting { Percentage = dto.Percentage };
-                _context.TaxSettings.Add(tax);
-            }
-            else
-            {
-                tax.Percentage = dto.Percentage;
-            }
-
-            await _context.SaveChangesAsync();
-            return new OkObjectResult("Tax updated successfully");
-        }
-
         public async Task<IActionResult> DeleteSkillAsync(int skillId)
         {
             var skill = await _context.Skills.FirstOrDefaultAsync(s => s.Id == skillId);
