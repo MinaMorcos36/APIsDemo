@@ -231,6 +231,10 @@ namespace ProGrow.API.Services.Implementations.Community
                         .Where(co => co.CompanyId == j.CompanyId)
                         .Select(co => co.PictureUrl)
                         .FirstOrDefault(),
+                    CompanyIndustry = _context.CompanyOverviews
+                        .Where(co => co.CompanyId == j.CompanyId)
+                        .Select(co => co.Industry.Name)
+                        .FirstOrDefault(),
 
                     LikesCount = j.JobLikes.Count,
                     SavesCount = j.JobSaves.Count,

@@ -11,6 +11,7 @@ namespace ProGrow.API.DTOs.Community.Posts
         public string AuthorType { get; set; } = null!;
         public string AuthorName { get; set; } = null!;
         public string? AuthorPictureUrl { get; set; }
+        public string? AuthorSubtitle { get; set; }
 
         public int LikesCount { get; set; }
         public int CommentsCount { get; set; }

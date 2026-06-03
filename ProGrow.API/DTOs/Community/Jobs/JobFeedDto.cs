@@ -25,6 +25,7 @@ namespace ProGrow.API.DTOs.Community.Jobs
         public int CompanyId { get; set; }
         public string CompanyName { get; set; } = null!;
         public string? CompanyPictureUrl { get; set; }
+        public string? CompanyIndustry { get; set; }
 
         public int LikesCount { get; set; }
         public int SavesCount { get; set; }
