@@ -1,6 +1,7 @@
 using ProGrow.API.DTOs.Auth.JobSeeker;
 using ProGrow.API.DTOs.UserProfile;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 
 namespace ProGrow.API.Services.Interfaces.Authentication
 {
@@ -12,6 +13,7 @@ namespace ProGrow.API.Services.Interfaces.Authentication
         Task<IActionResult> VerifyEmailAsync(VerifyUserEmailDto dto);
         Task<IActionResult> UpdateProfileAsync(UpdateProfileDto dto);
         Task<IActionResult> UploadProfilePhotoAsync(IFormFile photo);
+        Task<IActionResult> UploadCvAsync(IFormFile cv);
         Task<IActionResult> GetUserPhotoAsync(int userId);
         Task<IActionResult> GetProfileAsync();
         Task<IActionResult> GetSavedPostsAsync();

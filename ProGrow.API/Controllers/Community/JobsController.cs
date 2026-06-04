@@ -22,6 +22,7 @@ namespace ProGrow.API.Controllers.Community
             _jobSaveService = jobSaveService;
         }
 
+        [Authorize(Policy = "RecruiterOnly")]
         [HttpPost]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> CreateJob([FromForm] CreateJobDto dto, IFormFile bannerImage)
@@ -67,10 +68,20 @@ namespace ProGrow.API.Controllers.Community
 
         [HttpPost("{jobId}/apply")]
         [Consumes("multipart/form-data")]
-        public async Task<IActionResult> Apply(int jobId, [FromForm] ApplyJobDto dto, IFormFile cvFile)
+        public async Task<IActionResult> Apply(int jobId, [FromForm] ApplyJobDto dto, IFormFile? cvFile)
         {
-            if (dto == null || cvFile == null || cvFile.Length == 0 || string.IsNullOrWhiteSpace(dto.PhoneNumber))
-                return BadRequest("CV file and phone number are required.");
+            if (dto == null || string.IsNullOrWhiteSpace(dto.PhoneNumber))
+                return BadRequest("Phone number is required.");
+
+            // Validation: require exactly one of CvId or cvFile
+            bool hasCvId = dto.CvId.HasValue;
+            bool hasCvFile = cvFile != null && cvFile.Length > 0;
+
+            if (hasCvId && hasCvFile)
+                return BadRequest("Provide either a CV ID to select an existing CV or upload a new file, not both.");
+
+            if (!hasCvId && !hasCvFile)
+                return BadRequest("Either provide a CV ID to select an existing CV or upload a new CV file.");
 
             await _jobService.ApplyAsync(jobId, dto, cvFile);
             return Ok(new { Message = "Application submitted." });

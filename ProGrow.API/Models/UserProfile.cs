@@ -41,8 +41,8 @@ public partial class UserProfile
 
     public string? PictureUrl { get; set; }
 
-    [Column("CVUrl")]
-    public string? Cvurl { get; set; }
+    [Column("CVScore")]
+    public int? CvScore { get; set; }
 
     [ForeignKey("UserId")]
     [InverseProperty("UserProfiles")]

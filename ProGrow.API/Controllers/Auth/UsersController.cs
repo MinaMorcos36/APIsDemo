@@ -80,6 +80,15 @@ namespace ProGrow.API.Controllers.Auth
         {
             return await _userService.UploadProfilePhotoAsync(photo);
         }
+
+        [Authorize]
+        [HttpPost("me/profile/cv")]
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> UploadCv(IFormFile cv)
+        {
+            return await _userService.UploadCvAsync(cv);
+        }
+
         #endregion
 
         #region GetUserProfile
