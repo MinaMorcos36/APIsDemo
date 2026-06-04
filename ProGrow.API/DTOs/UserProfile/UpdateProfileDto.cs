@@ -16,7 +16,6 @@ namespace ProGrow.API.DTOs.UserProfile
         [MaxLength(100)]
         public string? University { get; set; }
         public string? PictureUrl { get; set; }
-        public string? CvUrl { get; set; }
 
         [MaxLength(60)]
         public string? FirstName { get; set; }

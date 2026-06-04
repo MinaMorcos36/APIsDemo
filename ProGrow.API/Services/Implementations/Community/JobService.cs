@@ -352,7 +352,7 @@ namespace ProGrow.API.Services.Implementations.Community
 
         }
 
-        public async Task ApplyAsync(int jobId, ApplyJobDto dto, IFormFile cvFile)
+        public async Task ApplyAsync(int jobId, ApplyJobDto dto, IFormFile? cvFile)
         {
             var authorType = GetAuthorType();
             if (authorType == "Recruiter")
@@ -379,27 +379,52 @@ namespace ProGrow.API.Services.Implementations.Community
                 await _context.SaveChangesAsync();
             }
 
-            string text;
-            try
+            CvModel cv;
+            string cvFileName;
+            string? cvFilePath = null;
+
+            // Handle CV selection vs upload
+            if (dto.CvId.HasValue)
             {
-                text = _fileParsingService.Parse(cvFile);
+                // User selected an existing CV
+                cv = await _context.Cvs.FirstOrDefaultAsync(c => c.Id == dto.CvId.Value && c.UserId == applicantId);
+                if (cv == null)
+                    throw new KeyNotFoundException("Selected CV not found or does not belong to you.");
+
+                cvFileName = cv.FileName;
+                cvFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "cvs", cv.FileName);
             }
-            catch (NotSupportedException ex)
+            else if (cvFile != null && cvFile.Length > 0)
             {
-                throw new InvalidOperationException(ex.Message);
+                // User uploaded a new CV
+                string text;
+                try
+                {
+                    text = _fileParsingService.Parse(cvFile);
+                }
+                catch (NotSupportedException ex)
+                {
+                    throw new InvalidOperationException(ex.Message);
+                }
+
+                var uploadsRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "cvs");
+                Directory.CreateDirectory(uploadsRoot);
+                var safeFileName = $"{Guid.NewGuid():N}_{Path.GetFileName(cvFile.FileName)}";
+                cvFilePath = Path.Combine(uploadsRoot, safeFileName);
+                await using (var stream = new FileStream(cvFilePath, FileMode.Create))
+                {
+                    await cvFile.CopyToAsync(stream);
+                }
+
+                cv = await _cvProcessingService.Save(applicantId, cvFile.FileName, text);
+                cvFileName = cvFile.FileName;
+            }
+            else
+            {
+                throw new InvalidOperationException("Either provide a CV ID to select an existing CV or upload a new CV file.");
             }
 
-            var uploadsRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "cvs");
-            Directory.CreateDirectory(uploadsRoot);
-            var safeFileName = $"{Guid.NewGuid():N}_{Path.GetFileName(cvFile.FileName)}";
-            var savedPath = Path.Combine(uploadsRoot, safeFileName);
-            await using (var stream = new FileStream(savedPath, FileMode.Create))
-            {
-                await cvFile.CopyToAsync(stream);
-            }
-
-            var cv = await _cvProcessingService.Save(applicantId, cvFile.FileName, text);
-
+            // Evaluate CV against job description
             int? score = null;
             string? reason = null;
             try
@@ -419,8 +444,8 @@ namespace ProGrow.API.Services.Implementations.Community
                 ApplicantId = applicantId,
                 StatusId = pendingStatus.Id,
                 CreatedAt = DateTime.UtcNow,
-                CvFileName = cvFile.FileName,
-                CvFilePath = savedPath,
+                CvFileName = cvFileName,
+                CvFilePath = cvFilePath,
                 CvId = cv.Id,
                 CvScore = score,
                 CvScoreReason = reason,

@@ -28,13 +28,17 @@ namespace ProGrow.API.Services.Implementations.Authentication
             ".jpeg"
         };
         private const long MaxPhotoSizeBytes = 5 * 1024 * 1024;
+        private readonly AI.CvProcessingService _cvService;
+        private readonly AI.FileParsingService _fileParsingService;
 
-        public UserService(AppDbContext context, JwtService jwt, IEmailService emailService, IHttpContextAccessor httpContextAccessor)
+        public UserService(AppDbContext context, JwtService jwt, IEmailService emailService, IHttpContextAccessor httpContextAccessor, AI.CvProcessingService cvService, AI.FileParsingService fileParsingService)
         {
             _context = context;
             _jwt = jwt;
             _emailService = emailService;
             _httpContextAccessor = httpContextAccessor;
+            _cvService = cvService;
+            _fileParsingService = fileParsingService;
         }
 
         private int? GetAuthorId()
@@ -243,9 +247,6 @@ namespace ProGrow.API.Services.Implementations.Authentication
             if (dto.PictureUrl != null)
                 profile.PictureUrl = dto.PictureUrl;
 
-            if (dto.CvUrl != null)
-                profile.Cvurl = dto.CvUrl;
-
             if (dto.FirstName != null)
                 profile.FirstName = dto.FirstName;
 
@@ -330,6 +331,28 @@ namespace ProGrow.API.Services.Implementations.Authentication
             await _context.SaveChangesAsync();
 
             return new OkObjectResult(new { PictureUrl = relativeUrl });
+        }
+
+        public async Task<IActionResult> UploadCvAsync(IFormFile cv)
+        {
+            var userId = GetAuthorId();
+            if (userId == null) return new UnauthorizedResult();
+
+            if (cv == null || cv.Length == 0)
+                return new BadRequestObjectResult("CV file is required.");
+
+            string text;
+            try
+            {
+                text = _fileParsingService.Parse(cv);
+            }
+            catch (NotSupportedException ex)
+            {
+                return new BadRequestObjectResult(ex.Message);
+            }
+
+            var savedCv = await _cvService.Save(userId.Value, cv.FileName, text);
+            return new OkObjectResult(new { Id = savedCv.Id, FileName = savedCv.FileName, Language = savedCv.Language, CreatedAt = savedCv.CreatedAt });
         }
 
         public async Task<IActionResult> GetUserPhotoAsync(int userId)
@@ -422,7 +445,7 @@ namespace ProGrow.API.Services.Implementations.Authentication
                 Major = profile.Major,
                 University = profile.University,
                 PictureUrl = profile.PictureUrl,
-                CvUrl = profile.Cvurl,
+                CvScore = profile.CvScore,
                 FirstName = profile.FirstName,
                 LastName = profile.LastName,
                 Email = user.Email,

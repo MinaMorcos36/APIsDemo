@@ -3,6 +3,7 @@ using ProGrow.API.Services.Implementations.AI;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
 
 namespace ProGrow.API.Controllers.AI;
 
@@ -15,17 +16,20 @@ public class CvController : ControllerBase
     private readonly FileParsingService _fileParsingService;
     private readonly GeminiCvEvaluationService _geminiService;
     private readonly CareerChatService _careerChatService;
+    private readonly AppDbContext _context;
 
     public CvController(
         CvProcessingService cvService,
         FileParsingService fileParsingService,
         GeminiCvEvaluationService geminiService,
-        CareerChatService careerChatService)
+        CareerChatService careerChatService,
+        AppDbContext context)
     {
         _cvService = cvService;
         _fileParsingService = fileParsingService;
         _geminiService = geminiService;
         _careerChatService = careerChatService;
+        _context = context;
     }
 
     private int GetUserId()
@@ -129,6 +133,50 @@ public class CvController : ControllerBase
     }
 
     // ===============================
+    // Score a CV using user's profile headline and save score to profile
+    // ===============================
+    [HttpPost("score/{cvId}")]
+    public async Task<IActionResult> ScoreCv(int cvId)
+    {
+        var userId = GetUserId();
+
+        var cv = await _cvService.GetById(cvId, userId);
+        if (cv == null)
+            return NotFound("CV not found.");
+
+        var profile = await _context.UserProfiles.FirstOrDefaultAsync(p => p.UserId == userId);
+        if (profile == null)
+        {
+            profile = new UserProfile { UserId = userId };
+            _context.UserProfiles.Add(profile);
+        }
+
+        var jobDescription = profile.Headline;
+        if (string.IsNullOrWhiteSpace(jobDescription))
+            return BadRequest("Profile headline is required for scoring.");
+
+        CvEvaluationResult evaluation;
+        try
+        {
+            evaluation = await _geminiService.EvaluateAsync(cv.RawText, jobDescription);
+        }
+        catch (Exception)
+        {
+            return StatusCode(503, "AI service is currently unavailable");
+        }
+
+        profile.CvScore = evaluation.Score;
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            Score = evaluation.Score,
+            Reason = evaluation.Reason,
+            Shortlisted = evaluation.Shortlisted
+        });
+    }
+
+    // ===============================
     // 3?? Get My CVs
     // ===============================
     [HttpGet]
@@ -145,6 +193,27 @@ public class CvController : ControllerBase
             c.Language,
             c.CreatedAt
         }));
+    }
+
+    // ===============================
+    // 3.1?? Get My CVs for Dropdown
+    // ===============================
+    [HttpGet("my-cvs")]
+    public async Task<IActionResult> GetMyCvsForDropdown()
+    {
+        var userId = GetUserId();
+
+        var cvs = await _context.Cvs
+            .Where(cv => cv.UserId == userId)
+            .OrderByDescending(cv => cv.CreatedAt)
+            .Select(cv => new
+            {
+                cv.Id,
+                cv.FileName
+            })
+            .ToListAsync();
+
+        return Ok(cvs);
     }
 
     // ===============================

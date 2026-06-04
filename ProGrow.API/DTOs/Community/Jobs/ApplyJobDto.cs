@@ -13,5 +13,7 @@ namespace ProGrow.API.DTOs.Community.Jobs
 
         [Url]
         public string? PortfolioLink { get; set; }
+
+        public int? CvId { get; set; }
     }
 }

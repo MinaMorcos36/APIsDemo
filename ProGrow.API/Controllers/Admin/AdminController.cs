@@ -8,6 +8,7 @@ namespace ProGrow.API.Controllers.Admin
     [Route("api/[controller]")]
     [ApiController]
     [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "AdminOnly")]
     public class AdminController : ControllerBase
     {
         private readonly IAdminService _adminService;

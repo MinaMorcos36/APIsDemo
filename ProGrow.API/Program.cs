@@ -68,6 +68,18 @@ builder.Services.AddAuthentication(options =>
         options.CallbackPath = "/api/auth/google-callback";
     });
 
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("RecruiterOnly", policy =>
+        policy.RequireClaim("AuthorType", "Recruiter"));
+
+    options.AddPolicy("JobSeekerOnly", policy =>
+        policy.RequireClaim("AuthorType", "JobSeeker"));
+
+    options.AddPolicy("AdminOnly", policy =>
+        policy.RequireClaim("AuthorType", "Admin"));
+});
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReact",
@@ -90,6 +102,8 @@ builder.Services.AddScoped<IPostSaveService, PostSaveService>();
 builder.Services.AddScoped<IJobLikeService, JobLikeService>();
 builder.Services.AddScoped<IJobSaveService, JobSaveService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<FileParsingService>();
+builder.Services.AddScoped<CvProcessingService>();
 builder.Services.AddScoped<ICompanyService, CompanyService>();
 builder.Services.AddScoped<IJobService, JobService>();
 builder.Services.AddScoped<ICommunityService, CommunityService>();
