@@ -63,7 +63,7 @@ namespace ProGrow.API.Controllers.Auth
         #endregion
 
         #region UpdateProfile
-        [Authorize]
+        [Authorize(Policy = "JobSeekerOnly")]
         [HttpPatch("me/profile")]
         public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileDto dto)
         {
@@ -73,7 +73,7 @@ namespace ProGrow.API.Controllers.Auth
         #endregion
 
         #region UploadProfilePhoto
-        [Authorize]
+        [Authorize(Policy = "JobSeekerOnly")]
         [HttpPost("me/profile/photo")]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> UploadProfilePhoto(IFormFile photo)
@@ -81,7 +81,7 @@ namespace ProGrow.API.Controllers.Auth
             return await _userService.UploadProfilePhotoAsync(photo);
         }
 
-        [Authorize]
+        [Authorize(Policy = "JobSeekerOnly")]
         [HttpPost("me/profile/cv")]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> UploadCv(IFormFile cv)
@@ -92,7 +92,7 @@ namespace ProGrow.API.Controllers.Auth
         #endregion
 
         #region GetUserProfile
-        [Authorize]
+        [Authorize(Policy = "JobSeekerOnly")]
         [HttpGet("me/profile")]
         public async Task<IActionResult> GetProfile()
         {
@@ -110,7 +110,7 @@ namespace ProGrow.API.Controllers.Auth
         #endregion
 
         #region Saved Posts
-        [Authorize]
+        [Authorize(Policy = "JobSeekerOnly")]
         [HttpGet("SavedPosts")]
         public async Task<IActionResult> GetSavedPosts()
         {
@@ -126,21 +126,21 @@ namespace ProGrow.API.Controllers.Auth
             return await _userService.GetSkillsAsync();
         }
 
-        [Authorize]
+        [Authorize(Policy = "JobSeekerOnly")]
         [HttpPost("skills")]
         public async Task<IActionResult> AddSkill([FromBody] AddUserSkillDto dto)
         {
             return await _userService.AddSkillAsync(dto);
         }
 
-        [Authorize]
+        [Authorize(Policy = "JobSeekerOnly")]
         [HttpGet("me/skills")]
         public async Task<IActionResult> GetUserSkills()
         {
             return await _userService.GetUserSkillsAsync();
         }
 
-        [Authorize]
+        [Authorize(Policy = "JobSeekerOnly")]
         [HttpDelete("skills/{id}")]
         public async Task<IActionResult> RemoveSkill([FromRoute] int id)
         {

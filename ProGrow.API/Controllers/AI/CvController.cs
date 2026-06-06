@@ -198,6 +198,7 @@ public class CvController : ControllerBase
     // ===============================
     // 3.1?? Get My CVs for Dropdown
     // ===============================
+    [Authorize(Policy = "JobSeekerOnly")]
     [HttpGet("my-cvs")]
     public async Task<IActionResult> GetMyCvsForDropdown()
     {

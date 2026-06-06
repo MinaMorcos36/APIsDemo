@@ -44,6 +44,7 @@ namespace ProGrow.API.Controllers.Community
             return Ok(feed);
         }
 
+        [Authorize(Policy = "RecruiterOnly")]
         [HttpGet("categories")]
         public async Task<IActionResult> GetCategories()
         {
@@ -58,7 +59,7 @@ namespace ProGrow.API.Controllers.Community
             return Ok(job);
         }
 
-        [Authorize]
+        [Authorize(Policy = "RecruiterOnly")]
         [HttpGet("my-jobs")]
         public async Task<IActionResult> GetJobs([FromQuery] string? filter, [FromQuery] int? page, [FromQuery] int? pageSize)
         {
@@ -66,6 +67,7 @@ namespace ProGrow.API.Controllers.Community
             return Ok(jobs);
         }
 
+        [Authorize(Policy = "JobSeekerOnly")]
         [HttpPost("{jobId}/apply")]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> Apply(int jobId, [FromForm] ApplyJobDto dto, IFormFile? cvFile)
@@ -87,6 +89,7 @@ namespace ProGrow.API.Controllers.Community
             return Ok(new { Message = "Application submitted." });
         }
 
+        [Authorize(Policy = "RecruiterOnly")]
         [HttpGet("applications/{jobId}")]
         public async Task<IActionResult> GetApplications(int jobId, [FromQuery] string? filter, [FromQuery] string? sort, [FromQuery] int? page, [FromQuery] int? pageSize)
         {
@@ -94,6 +97,7 @@ namespace ProGrow.API.Controllers.Community
             return Ok(apps);
         }
 
+        [Authorize(Policy = "RecruiterOnly")]
         [HttpGet("applications/{id}/cv")]
         public async Task<IActionResult> DownloadCv(int id)
         {
@@ -101,6 +105,7 @@ namespace ProGrow.API.Controllers.Community
             return File(content, contentType, fileName);
         }
 
+        [Authorize(Policy = "JobSeekerOnly")]
         [HttpGet("my-applications")]
         public async Task<IActionResult> GetMyApplications([FromQuery] string? filter, [FromQuery] int? page, [FromQuery] int? pageSize)
         {
@@ -108,6 +113,7 @@ namespace ProGrow.API.Controllers.Community
             return Ok(apps);
         }
 
+        [Authorize(Policy = "RecruiterOnly")]
         [HttpPost("applications/{id}/accept")]
         public async Task<IActionResult> Accept(int id)
         {
@@ -115,6 +121,7 @@ namespace ProGrow.API.Controllers.Community
             return Ok(new { Message = "Application accepted." });
         }
 
+        [Authorize(Policy = "RecruiterOnly")]
         [HttpPost("applications/{id}/reject")]
         public async Task<IActionResult> Reject(int id)
         {
@@ -122,6 +129,7 @@ namespace ProGrow.API.Controllers.Community
             return Ok(new { Message = "Application rejected." });
         }
 
+        [Authorize(Policy = "RecruiterOnly")]
         [HttpPost("{jobId}/set-active")]
         public async Task<IActionResult> SetActive(int jobId, [FromBody] SetActiveDto dto)
         {
@@ -132,6 +140,7 @@ namespace ProGrow.API.Controllers.Community
             return Ok(job);
         }
 
+        [Authorize]
         [HttpPost("{jobId}/like")]
         public async Task<IActionResult> ToggleLike(int jobId)
         {
@@ -144,6 +153,7 @@ namespace ProGrow.API.Controllers.Community
             });
         }
 
+        [Authorize]
         [HttpPost("{jobId}/save")]
         public async Task<IActionResult> ToggleSave(int jobId)
         {

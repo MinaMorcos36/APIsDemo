@@ -60,7 +60,7 @@ namespace ProGrow.API.Controllers.Auth
         #endregion
 
         #region GetOverview
-        [Authorize]
+        [Authorize(Policy = "RecruiterOnly")]
         [HttpGet("me/overview")]
         public async Task<IActionResult> GetOverview()
         {
@@ -78,7 +78,7 @@ namespace ProGrow.API.Controllers.Auth
         #endregion
 
         #region Saved Posts
-        [Authorize]
+        [Authorize(Policy = "RecruiterOnly")]
         [HttpGet("SavedPosts")]
         public async Task<IActionResult> GetSavedPosts()
         {
@@ -87,7 +87,7 @@ namespace ProGrow.API.Controllers.Auth
         #endregion
 
         #region UpdateOverview
-        [Authorize]
+        [Authorize(Policy = "RecruiterOnly")]
         [HttpPatch("me/overview")]
         public async Task<IActionResult> UpdateOverview([FromBody] UpdateOverviewDto dto)
         {
@@ -97,7 +97,7 @@ namespace ProGrow.API.Controllers.Auth
         #endregion
 
         #region UploadCompanyPhoto
-        [Authorize]
+        [Authorize(Policy = "RecruiterOnly")]
         [HttpPost("me/overview/photo")]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> UploadCompanyPhoto(IFormFile photo)

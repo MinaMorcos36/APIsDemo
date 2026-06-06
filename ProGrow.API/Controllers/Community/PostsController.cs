@@ -22,6 +22,7 @@ namespace ProGrow.API.Controllers.Community
         }
 
         #region Create Post
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> CreatePost([FromBody] CreatePostDto dto)
         {
@@ -36,6 +37,7 @@ namespace ProGrow.API.Controllers.Community
         #endregion
 
         #region Get Feed
+        [Authorize]
         [HttpGet("feed")]
         public async Task<IActionResult> GetFeed([FromQuery] int? page, [FromQuery] int? pageSize)
         {
@@ -45,6 +47,7 @@ namespace ProGrow.API.Controllers.Community
         #endregion
 
         #region Like Post
+        [Authorize]
         [HttpPost("{postId}/like")]
         public async Task<IActionResult> ToggleLike(int postId)
         {
@@ -59,6 +62,7 @@ namespace ProGrow.API.Controllers.Community
         #endregion
 
         #region Save Post
+        [Authorize]
         [HttpPost("{postId}/save")]
         public async Task<IActionResult> ToggleSave(int postId)
         {
