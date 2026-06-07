@@ -1,5 +1,8 @@
 using ProGrow.API.DTOs.Auth.JobSeeker;
 using ProGrow.API.DTOs.Community;
+using ProGrow.API.DTOs.Community.Feed;
+using ProGrow.API.DTOs.Community.Posts;
+using ProGrow.API.DTOs.Community.Jobs;
 using ProGrow.API.DTOs.UserProfile;
 using ProGrow.API.Models;
 using ProGrow.API.Services.Interfaces.Authentication;
@@ -47,6 +50,11 @@ namespace ProGrow.API.Services.Implementations.Authentication
             var id = user?.FindFirstValue(ClaimTypes.NameIdentifier);
             if (id == null) return null;
             return int.Parse(id);
+        }
+
+        private string GetAuthorType()
+        {
+            return _httpContextAccessor.HttpContext!.User.FindFirstValue("AuthorType")!;
         }
 
         public async Task<IActionResult> RegisterAsync(RegisterUserDto dto)
@@ -458,25 +466,126 @@ namespace ProGrow.API.Services.Implementations.Authentication
             return new OkObjectResult(response);
         }
 
-        public async Task<IActionResult> GetSavedPostsAsync()
+        public async Task<IActionResult> GetSavedItemsAsync()
         {
             var authorId = GetAuthorId();
             if (authorId == null) return new UnauthorizedResult();
 
-            var savedPosts = await _context.PostSaves
-                .Where(sp => sp.AuthorId == authorId.Value)
-                .Select(sp => new SavedPostsDto
+            var authorType = GetAuthorType();
+
+            var postItems = await _context.PostSaves
+                .Where(sp => sp.AuthorId == authorId.Value && sp.AuthorType == authorType)
+                .Select(sp => new FeedItemDto
                 {
-                    SavedPostId = sp.Id,
-                    SavedAt = sp.SavedAt,
-                    PostId = sp.Post.Id,
-                    Content = sp.Post.Content,
-                    CreatedAt = sp.Post.CreatedAt,
-                    AuthorId = sp.Post.AuthorId,
-                    AuthorType = sp.Post.AuthorType
+                    Type = "Post",
+                    CreatedAt = sp.Post.CreatedAt ?? DateTime.UtcNow,
+                    Post = new PostFeedDto
+                    {
+                        Id = sp.Post.Id,
+                        Content = sp.Post.Content,
+                        CreatedAt = sp.Post.CreatedAt ?? DateTime.UtcNow,
+                        AuthorId = sp.Post.AuthorId,
+                        AuthorType = sp.Post.AuthorType ?? string.Empty,
+                        LikesCount = sp.Post.PostLikes.Count,
+                        CommentsCount = sp.Post.Comments.Count,
+                        IsLikedByMe = sp.Post.PostLikes.Any(l => l.AuthorId == authorId.Value && l.AuthorType == authorType),
+                        IsSavedByMe = true,
+                        AuthorName = sp.Post.AuthorType == "JobSeeker"
+                            ? _context.UserProfiles
+                                .Where(up => up.UserId == sp.Post.AuthorId)
+                                .Select(up => ((up.FirstName ?? string.Empty) + " " + (up.LastName ?? string.Empty)).Trim())
+                                .FirstOrDefault() ?? string.Empty
+                            : sp.Post.AuthorType == "Recruiter"
+                                ? _context.CompanyOverviews
+                                    .Where(co => co.CompanyId == sp.Post.AuthorId)
+                                    .Select(co => co.Name)
+                                    .FirstOrDefault() ?? string.Empty
+                                : string.Empty,
+                        AuthorPictureUrl = sp.Post.AuthorType == "JobSeeker"
+                            ? _context.UserProfiles
+                                .Where(up => up.UserId == sp.Post.AuthorId)
+                                .Select(up => up.PictureUrl)
+                                .FirstOrDefault()
+                            : sp.Post.AuthorType == "Recruiter"
+                                ? _context.CompanyOverviews
+                                    .Where(co => co.CompanyId == sp.Post.AuthorId)
+                                    .Select(co => co.PictureUrl)
+                                    .FirstOrDefault()
+                                : null,
+                        AuthorSubtitle = sp.Post.AuthorType == "JobSeeker"
+                            ? _context.UserProfiles
+                                .Where(up => up.UserId == sp.Post.AuthorId)
+                                .Select(up => up.Headline)
+                                .FirstOrDefault()
+
+                                : sp.Post.AuthorType == "Recruiter"
+                                ? _context.CompanyOverviews
+                                    .Where(co => co.CompanyId == sp.Post.AuthorId)
+                                    .Select(co => co.Industry.Name)
+                                    .FirstOrDefault()
+
+                                : null,
+                    }
                 })
                 .ToListAsync();
-            return new OkObjectResult(savedPosts);
+
+            var jobItems = await _context.JobSaves
+                .Where(js => js.AuthorId == authorId.Value && js.AuthorType == authorType)
+                .Select(js => new FeedItemDto
+                {
+                    Type = "Job",
+                    CreatedAt = js.Job.CreatedAt,
+                    Job = new JobFeedDto
+                    {
+                        Id = js.Job.Id,
+                        Title = js.Job.Title,
+                        Description = js.Job.AboutRole,
+                        Location = js.Job.CityOffice,
+                        ShortDescription = js.Job.ShortDescription,
+                        LocationMode = js.Job.LocationMode,
+                        JobType = js.Job.JobType,
+                        CityOffice = js.Job.CityOffice,
+                        JobCategoryId = js.Job.JobCategoryId,
+                        JobCategoryName = _context.JobCategories
+                            .Where(c => c.Id == js.Job.JobCategoryId)
+                            .Select(c => c.Name)
+                            .FirstOrDefault() ?? string.Empty,
+                        SalaryFrom = js.Job.SalaryFrom,
+                        SalaryTo = js.Job.SalaryTo,
+                        IsSalaryInInterview = js.Job.SalaryInInterview,
+                        BannerImageUrl = js.Job.BannerImageUrl,
+                        AboutRole = js.Job.AboutRole,
+                        Responsibilities = js.Job.Responsibilities,
+                        Requirements = js.Job.Requirements,
+                        CreatedAt = js.Job.CreatedAt,
+                        UpdatedAt = js.Job.UpdatedAt,
+
+                        CompanyId = js.Job.CompanyId,
+                        CompanyName = _context.CompanyOverviews
+                            .Where(co => co.CompanyId == js.Job.CompanyId)
+                            .Select(co => co.Name)
+                            .FirstOrDefault() ?? string.Empty,
+                        CompanyPictureUrl = _context.CompanyOverviews
+                            .Where(co => co.CompanyId == js.Job.CompanyId)
+                            .Select(co => co.PictureUrl)
+                            .FirstOrDefault(),
+                        CompanyIndustry = _context.CompanyOverviews
+                            .Where(co => co.CompanyId == js.Job.CompanyId)
+                            .Select(co => co.Industry.Name)
+                            .FirstOrDefault(),
+
+                        LikesCount = js.Job.JobLikes.Count,
+                        SavesCount = js.Job.JobSaves.Count,
+                        IsAppliedByMe = js.Job.JobApplications.Any(a => a.ApplicantId == authorId.Value),
+                        IsActive = js.Job.IsActive,
+                        IsLikedByMe = js.Job.JobLikes.Any(l => l.AuthorId == authorId.Value && l.AuthorType == authorType),
+                        IsSavedByMe = true
+                    }
+                })
+                .ToListAsync();
+
+            var combined = postItems.Cast<FeedItemDto>().Concat(jobItems).OrderByDescending(i => i.CreatedAt).ToList();
+            return new OkObjectResult(combined);
         }
 
         public async Task<IActionResult> GetSkillsAsync()

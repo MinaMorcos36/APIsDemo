@@ -77,12 +77,12 @@ namespace ProGrow.API.Controllers.Auth
         }
         #endregion
 
-        #region Saved Posts
+        #region Saved Items
         [Authorize(Policy = "RecruiterOnly")]
-        [HttpGet("SavedPosts")]
-        public async Task<IActionResult> GetSavedPosts()
+        [HttpGet("SavedItems")]
+        public async Task<IActionResult> GetSavedItems()
         {
-            return await _companyService.GetSavedPostsAsync();
+            return await _companyService.GetSavedItemsAsync();
         }
         #endregion
 

@@ -28,11 +28,6 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-builder.Services.AddScoped<FileParsingService>();
-builder.Services.AddScoped<LanguageDetectionService>();
-builder.Services.AddScoped<CvProcessingService>();
-builder.Services.AddScoped<GeminiCvEvaluationService>();
-builder.Services.AddScoped<CareerChatService>();
 
 builder.Services.AddKernel();
 builder.Services.AddGoogleAIGeminiChatCompletion(builder.Configuration["AI:Gemini:Model"],
@@ -102,13 +97,16 @@ builder.Services.AddScoped<IPostSaveService, PostSaveService>();
 builder.Services.AddScoped<IJobLikeService, JobLikeService>();
 builder.Services.AddScoped<IJobSaveService, JobSaveService>();
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<FileParsingService>();
-builder.Services.AddScoped<CvProcessingService>();
 builder.Services.AddScoped<ICompanyService, CompanyService>();
 builder.Services.AddScoped<IJobService, JobService>();
 builder.Services.AddScoped<ICommunityService, CommunityService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<ISalaryCalculationService, SalaryCalculationService>();
+builder.Services.AddScoped<FileParsingService>();
+builder.Services.AddScoped<LanguageDetectionService>();
+builder.Services.AddScoped<CvProcessingService>();
+builder.Services.AddScoped<GeminiCvEvaluationService>();
+builder.Services.AddScoped<CareerChatService>();
 
 var app = builder.Build();
 
