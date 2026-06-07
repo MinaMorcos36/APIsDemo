@@ -7,6 +7,7 @@ namespace ProGrow.API.DTOs.UserProfile
         public string? Major { get; set; }
         public string? University { get; set; }
         public string? PictureUrl { get; set; }
+        public string? CvName { get; set; }
         public int? CvScore { get; set; }
         public string? FirstName { get; set; }
         public string? LastName { get; set; }

@@ -44,6 +44,9 @@ public partial class UserProfile
     [Column("CVScore")]
     public int? CvScore { get; set; }
 
+    [Column("CVName")]
+    public string? CvName { get; set; }
+
     [ForeignKey("UserId")]
     [InverseProperty("UserProfiles")]
     public virtual User User { get; set; } = null!;

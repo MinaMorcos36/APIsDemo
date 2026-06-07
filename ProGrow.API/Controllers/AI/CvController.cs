@@ -135,6 +135,7 @@ public class CvController : ControllerBase
     // ===============================
     // Score a CV using user's profile headline and save score to profile
     // ===============================
+    [Authorize(Policy = "JobSeekerOnly")]
     [HttpPost("score/{cvId}")]
     public async Task<IActionResult> ScoreCv(int cvId)
     {
@@ -166,10 +167,12 @@ public class CvController : ControllerBase
         }
 
         profile.CvScore = evaluation.Score;
+        profile.CvName = cv.FileName;
         await _context.SaveChangesAsync();
 
         return Ok(new
         {
+            FileName = cv.FileName,
             Score = evaluation.Score,
             Reason = evaluation.Reason,
             Shortlisted = evaluation.Shortlisted

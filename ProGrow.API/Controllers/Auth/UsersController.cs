@@ -80,7 +80,9 @@ namespace ProGrow.API.Controllers.Auth
         {
             return await _userService.UploadProfilePhotoAsync(photo);
         }
+        #endregion
 
+        #region UploadProfileCV
         [Authorize(Policy = "JobSeekerOnly")]
         [HttpPost("me/profile/cv")]
         [Consumes("multipart/form-data")]

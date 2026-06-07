@@ -445,6 +445,7 @@ namespace ProGrow.API.Services.Implementations.Authentication
                 Major = profile.Major,
                 University = profile.University,
                 PictureUrl = profile.PictureUrl,
+                CvName = profile.CvName,
                 CvScore = profile.CvScore,
                 FirstName = profile.FirstName,
                 LastName = profile.LastName,
