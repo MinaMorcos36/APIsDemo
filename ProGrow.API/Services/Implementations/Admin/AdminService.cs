@@ -20,25 +20,18 @@ namespace ProGrow.API.Services.Implementations.Admin
         {
             var companies = await _context.Companies
                 .AsNoTracking()
-                .Where(c => !c.IsActive)
+                .Where(c => !c.IsActive && c.IsVerified && !c.IsDeclined)
                 .Select(c => new CompanyAdminDto
                 {
                     Id = c.Id,
                     Email = c.Email,
                     IsVerified = c.IsVerified,
                     IsActive = c.IsActive,
-                    Name = _context.CompanyOverviews
-                        .Where(o => o.CompanyId == c.Id)
-                        .Select(o => o.Name)
-                        .FirstOrDefault(),
-                    Phone = _context.CompanyOverviews
-                        .Where(o => o.CompanyId == c.Id)
-                        .Select(o => o.Phone)
-                        .FirstOrDefault(),
-                    WebsiteUrl = _context.CompanyOverviews
-                        .Where(o => o.CompanyId == c.Id)
-                        .Select(o => o.WebsiteUrl)
-                        .FirstOrDefault()
+                    Name = c.CompanyOverviews.Select(o => o.Name).FirstOrDefault(),
+                    Phone = c.CompanyOverviews.Select(o => o.Phone).FirstOrDefault(),
+                    Address = c.CompanyOverviews.Select(o => o.Address).FirstOrDefault(),
+                    WebsiteUrl = c.CompanyOverviews.Select(o => o.WebsiteUrl).FirstOrDefault(),
+                    PictureUrl = c.CompanyOverviews.Select(o => o.PictureUrl).FirstOrDefault()
                 })
                 .ToListAsync();
 
@@ -69,6 +62,7 @@ namespace ProGrow.API.Services.Implementations.Admin
                 return new BadRequestObjectResult("Company is already declined or inactive.");
 
             company.IsActive = false;
+            company.IsDeclined = true;
 
             await _context.SaveChangesAsync();
 

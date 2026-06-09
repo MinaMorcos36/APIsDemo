@@ -8,6 +8,8 @@ namespace ProGrow.API.DTOs.Admin
         public bool IsActive { get; set; }
         public string? Name { get; set; }
         public string? Phone { get; set; }
+        public string? Address { get; set; }
         public string? WebsiteUrl { get; set; }
+        public string? PictureUrl { get; set; }
     }
 }

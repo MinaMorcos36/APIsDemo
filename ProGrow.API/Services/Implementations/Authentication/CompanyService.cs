@@ -137,6 +137,9 @@ namespace ProGrow.API.Services.Implementations.Authentication
             if (!company.IsActive)
                 return new UnauthorizedObjectResult("Email not activated. Please wait for admin approval.");
 
+            if (company.IsDeclined)
+                return new UnauthorizedObjectResult("Admin declined your account. Try registering again.");
+
             var hasher = new PasswordHasher<Company>();
             var verifyResult = hasher.VerifyHashedPassword(company, company.PasswordHash, dto.Password);
             if (verifyResult == PasswordVerificationResult.Failed)

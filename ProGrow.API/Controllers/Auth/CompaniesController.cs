@@ -36,7 +36,7 @@ namespace ProGrow.API.Controllers.Auth
             }
             
             catch (Exception ex)
-    {
+            {
                 return StatusCode(500, ex.ToString());
             }
         }

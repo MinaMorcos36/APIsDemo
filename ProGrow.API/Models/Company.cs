@@ -27,6 +27,7 @@ public partial class Company
     public DateTime? Otpexpiry { get; set; }
 
     public bool IsActive { get; set; }
+    public bool IsDeclined { get; set; }
 
     [InverseProperty("Company")]
     public virtual ICollection<CompanyOverview> CompanyOverviews { get; set; } = new List<CompanyOverview>();
