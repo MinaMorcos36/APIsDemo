@@ -24,14 +24,14 @@ namespace ProGrow.API.Controllers.Community
         #region Create Post
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> CreatePost([FromBody] CreatePostDto dto)
+        public async Task<IActionResult> CreatePost([FromForm] CreatePostDto dto, IFormFile? mediaFile)
         {
             if (dto == null || string.IsNullOrWhiteSpace(dto.Content))
             {
                 return BadRequest("Post content cannot be empty.");
             }
 
-            var result = await _postService.CreateAsync(dto);
+            var result = await _postService.CreateAsync(dto, mediaFile);
             return Ok(result);
         }
         #endregion
