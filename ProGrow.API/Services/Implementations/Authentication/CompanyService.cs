@@ -435,6 +435,7 @@ namespace ProGrow.API.Services.Implementations.Authentication
                     {
                         Id = sp.Post.Id,
                         Content = sp.Post.Content,
+                        PostMediaUrl = sp.Post.PostMediaUrl,
                         CreatedAt = sp.Post.CreatedAt ?? DateTime.UtcNow,
                         AuthorId = sp.Post.AuthorId,
                         AuthorType = sp.Post.AuthorType ?? string.Empty,

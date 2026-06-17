@@ -121,12 +121,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseCors("AllowReact");
+
 app.UseStaticFiles();
 
 app.UseAuthentication();
 app.UseAuthorization();
-
-app.UseCors("AllowReact");
 
 app.MapControllers();
 
