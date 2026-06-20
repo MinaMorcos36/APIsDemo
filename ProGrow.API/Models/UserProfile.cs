@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ProGrow.API.Models;
 
+[Index("UserId", IsUnique = true, Name = "UQ_UserProfiles_UserId")]
 public partial class UserProfile
 {
     [Key]

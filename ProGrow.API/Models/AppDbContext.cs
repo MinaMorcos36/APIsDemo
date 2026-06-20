@@ -35,6 +35,9 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<Job> Jobs { get; set; }
 
+    public virtual DbSet<JobType> JobTypes { get; set; }
+
+    public virtual DbSet<LocationMode> LocationModes { get; set; }
 
     public virtual DbSet<JobApplication> JobApplications { get; set; }
 
@@ -138,8 +141,6 @@ public partial class AppDbContext : DbContext
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
             entity.Property(e => e.IsActive).HasDefaultValue(true);
-            entity.Property(e => e.JobType).HasDefaultValueSql("(N'Full-time')");
-            entity.Property(e => e.LocationMode).HasDefaultValueSql("(N'On-site')");
             entity.Property(e => e.SalaryInInterview).HasDefaultValueSql("((0))");
             entity.Property(e => e.SalaryFrom).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.SalaryTo).HasColumnType("decimal(18, 2)");
@@ -152,6 +153,16 @@ public partial class AppDbContext : DbContext
                 .WithMany(p => p.Jobs)
                 .IsRequired()
                 .HasConstraintName("FK_Jobs_JobCategories");
+
+            entity.HasOne(d => d.JobType)
+                .WithMany(p => p.Jobs)
+                .IsRequired()
+                .HasConstraintName("FK_Jobs_JobTypes");
+
+            entity.HasOne(d => d.LocationMode)
+                .WithMany(p => p.Jobs)
+                .IsRequired()
+                .HasConstraintName("FK_Jobs_JobLocationModes");
         });
 
 

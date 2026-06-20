@@ -129,8 +129,8 @@ namespace ProGrow.API.Services.Implementations.Community
                 CompanyId = companyId,
                 Title = dto.Title,
                 ShortDescription = dto.ShortDescription,
-                LocationMode = dto.LocationMode,
-                JobType = dto.JobType,
+                JobTypeId = dto.JobTypeId,
+                LocationModeId = dto.LocationModeId,
                 CityOffice = dto.CityOffice,
                 JobCategoryId = dto.JobCategoryId,
                 SalaryFrom = dto.SalaryFrom,
@@ -168,10 +168,10 @@ namespace ProGrow.API.Services.Implementations.Community
                 CompanyId = job.CompanyId,
                 Title = job.Title,
                 ShortDescription = job.ShortDescription,
-                LocationMode = job.LocationMode,
+                LocationMode = _context.LocationModes.Where(l => l.Id == job.LocationModeId).Select(l => l.Name).FirstOrDefault() ?? string.Empty,
                 CreatedAt = job.CreatedAt,
                 IsActive = true,
-                JobType = dto.JobType,
+                JobType = _context.JobTypes.Where(t => t.Id == job.JobTypeId).Select(t => t.Name).FirstOrDefault() ?? string.Empty,
                 CityOffice = dto.CityOffice,
                 JobCategoryId = job.JobCategoryId,
                 JobCategoryName = _context.JobCategories
@@ -198,16 +198,16 @@ namespace ProGrow.API.Services.Implementations.Community
                 .OrderByDescending(j => j.CreatedAt)
                 .ApplyPaging(page, pageSize)
                 .Select(j => new JobFeedDto
-                {
-                    Id = j.Id,
-                    Title = j.Title,
-                    Description = j.AboutRole,
-                    Location = j.CityOffice,
-                    ShortDescription = j.ShortDescription,
-                    LocationMode = j.LocationMode,
-                    JobType = j.JobType,
-                    CityOffice = j.CityOffice,
-                    JobCategoryId = j.JobCategoryId,
+                    {
+                        Id = j.Id,
+                        Title = j.Title,
+                        Description = j.AboutRole,
+                        Location = j.CityOffice,
+                        ShortDescription = j.ShortDescription,
+                        LocationMode = _context.LocationModes.Where(l => l.Id == j.LocationModeId).Select(l => l.Name).FirstOrDefault() ?? string.Empty,
+                        JobType = _context.JobTypes.Where(t => t.Id == j.JobTypeId).Select(t => t.Name).FirstOrDefault() ?? string.Empty,
+                        CityOffice = j.CityOffice,
+                        JobCategoryId = j.JobCategoryId,
                     JobCategoryName = _context.JobCategories
                         .Where(c => c.Id == j.JobCategoryId)
                         .Select(c => c.Name)
@@ -268,6 +268,40 @@ namespace ProGrow.API.Services.Implementations.Community
                 .ToListAsync();
         }
 
+        public async Task<List<JobTypeDto>> GetJobTypesAsync()
+        {
+            var authorType = GetAuthorType();
+            if (authorType != "Recruiter")
+                throw new UnauthorizedAccessException("Only recruiters can view job types.");
+
+            return await _context.JobTypes
+                .AsNoTracking()
+                .OrderBy(t => t.Name)
+                .Select(t => new JobTypeDto
+                {
+                    Id = t.Id,
+                    Name = t.Name
+                })
+                .ToListAsync();
+        }
+
+        public async Task<List<LocationModeDto>> GetLocationModesAsync()
+        {
+            var authorType = GetAuthorType();
+            if (authorType != "Recruiter")
+                throw new UnauthorizedAccessException("Only recruiters can view location modes.");
+
+            return await _context.LocationModes
+                .AsNoTracking()
+                .OrderBy(l => l.Name)
+                .Select(l => new LocationModeDto
+                {
+                    Id = l.Id,
+                    Name = l.Name
+                })
+                .ToListAsync();
+        }
+
         public async Task<List<CompanysJobDto>> GetJobsAsync(string? filter = null, int? page = null, int? pageSize = null)
         {
             var authorId = GetAuthorId();
@@ -296,10 +330,10 @@ namespace ProGrow.API.Services.Implementations.Community
                     Description = j.AboutRole,
                     Location = j.CityOffice,
                     ShortDescription = j.ShortDescription,
-                    LocationMode = j.LocationMode,
-                    JobType = j.JobType,
-                    CityOffice = j.CityOffice,
-                    JobCategoryId = j.JobCategoryId,
+                        LocationMode = _context.LocationModes.Where(l => l.Id == j.LocationModeId).Select(l => l.Name).FirstOrDefault() ?? string.Empty,
+                        JobType = _context.JobTypes.Where(t => t.Id == j.JobTypeId).Select(t => t.Name).FirstOrDefault() ?? string.Empty,
+                        CityOffice = j.CityOffice,
+                        JobCategoryId = j.JobCategoryId,
                     JobCategoryName = _context.JobCategories
                         .Where(c => c.Id == j.JobCategoryId)
                         .Select(c => c.Name)
@@ -489,8 +523,8 @@ namespace ProGrow.API.Services.Implementations.Community
                     JobDescription = a.Job.AboutRole,
                     JobLocation = a.Job.CityOffice,
                     JobShortDescription = a.Job.ShortDescription,
-                    JobLocationMode = a.Job.LocationMode,
-                    JobType = a.Job.JobType,
+                    JobLocationMode = _context.LocationModes.Where(l => l.Id == a.Job.LocationModeId).Select(l => l.Name).FirstOrDefault(),
+                    JobType = _context.JobTypes.Where(t => t.Id == a.Job.JobTypeId).Select(t => t.Name).FirstOrDefault(),
                     JobCityOffice = a.Job.CityOffice,
                     JobSalaryFrom = a.Job.SalaryFrom,
                     JobSalaryTo = a.Job.SalaryTo,
@@ -504,7 +538,7 @@ namespace ProGrow.API.Services.Implementations.Community
                         .Where(co => co.CompanyId == a.Job.CompanyId)
                         .Select(co => co.Name)
                         .FirstOrDefault() ?? string.Empty,
-                    ApplicantId = a.ApplicantId,
+                    ApplicantId = a.ApplicantId,    
                     ApplicantName = (_context.UserProfiles
                         .Where(p => p.UserId == a.ApplicantId)
                         .Select(p => (p.FirstName ?? "") + " " + (p.LastName ?? ""))
@@ -599,8 +633,8 @@ namespace ProGrow.API.Services.Implementations.Community
                     JobDescription = a.Job.AboutRole,
                     JobLocation = a.Job.CityOffice,
                     JobShortDescription = a.Job.ShortDescription,
-                    JobLocationMode = a.Job.LocationMode,
-                    JobType = a.Job.JobType,
+                    JobLocationMode = _context.LocationModes.Where(l => l.Id == a.Job.LocationModeId).Select(l => l.Name).FirstOrDefault(),
+                    JobType = _context.JobTypes.Where(t => t.Id == a.Job.JobTypeId).Select(t => t.Name).FirstOrDefault(),
                     JobCityOffice = a.Job.CityOffice,
                     JobSalaryFrom = a.Job.SalaryFrom,
                     JobSalaryTo = a.Job.SalaryTo,
@@ -708,8 +742,8 @@ namespace ProGrow.API.Services.Implementations.Community
                 UpdatedAt = job.UpdatedAt,
                 IsActive = isActive,
                 ShortDescription = job.ShortDescription,
-                LocationMode = job.LocationMode,
-                JobType = job.JobType,
+                LocationMode = _context.LocationModes.Where(l => l.Id == job.LocationModeId).Select(l => l.Name).FirstOrDefault() ?? string.Empty,
+                JobType = _context.JobTypes.Where(t => t.Id == job.JobTypeId).Select(t => t.Name).FirstOrDefault() ?? string.Empty,
                 CityOffice = job.CityOffice,
                 JobCategoryId = job.JobCategoryId,
                 JobCategoryName = _context.JobCategories
@@ -749,8 +783,8 @@ namespace ProGrow.API.Services.Implementations.Community
                 CompanyPictureUrl = companyOverview?.PictureUrl,
                 CityOffice = job.CityOffice,
                 Title = job.Title,
-                LocationMode = job.LocationMode,
-                JobType = job.JobType,
+                LocationMode = _context.LocationModes.Where(l => l.Id == job.LocationModeId).Select(l => l.Name).FirstOrDefault() ?? string.Empty,
+                JobType = _context.JobTypes.Where(t => t.Id == job.JobTypeId).Select(t => t.Name).FirstOrDefault() ?? string.Empty,
                 JobCategoryId = job.JobCategoryId,
                 JobCategoryName = _context.JobCategories
                     .Where(c => c.Id == job.JobCategoryId)

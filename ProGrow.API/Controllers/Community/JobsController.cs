@@ -52,6 +52,22 @@ namespace ProGrow.API.Controllers.Community
             return Ok(categories);
         }
 
+        [Authorize(Policy = "RecruiterOnly")]
+        [HttpGet("job-types")]
+        public async Task<IActionResult> GetJobTypes()
+        {
+            var jobTypes = await _jobService.GetJobTypesAsync();
+            return Ok(jobTypes);
+        }
+
+        [Authorize(Policy = "RecruiterOnly")]
+        [HttpGet("location-modes")]
+        public async Task<IActionResult> GetLocationModes()
+        {
+            var locationModes = await _jobService.GetLocationModesAsync();
+            return Ok(locationModes);
+        }
+
         [HttpGet("{jobId}")]
         public async Task<IActionResult> GetJobDetails(int jobId)
         {

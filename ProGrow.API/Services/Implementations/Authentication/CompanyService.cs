@@ -495,8 +495,8 @@ namespace ProGrow.API.Services.Implementations.Authentication
                         Description = js.Job.AboutRole,
                         Location = js.Job.CityOffice,
                         ShortDescription = js.Job.ShortDescription,
-                        LocationMode = js.Job.LocationMode,
-                        JobType = js.Job.JobType,
+                        LocationMode = _context.LocationModes.Where(l => l.Id == js.Job.LocationModeId).Select(l => l.Name).FirstOrDefault(),
+                        JobType = _context.JobTypes.Where(t => t.Id == js.Job.JobTypeId).Select(t => t.Name).FirstOrDefault(),
                         CityOffice = js.Job.CityOffice,
                         JobCategoryId = js.Job.JobCategoryId,
                         JobCategoryName = _context.JobCategories

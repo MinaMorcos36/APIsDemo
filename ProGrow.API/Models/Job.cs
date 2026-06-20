@@ -19,17 +19,11 @@ public partial class Job
     [StringLength(100)]
     public string ShortDescription { get; set; } = null!;
 
-    [StringLength(20)]
-    public string LocationMode { get; set; } = null!;
-
     public DateTime CreatedAt { get; set; }
 
     public DateTime? UpdatedAt { get; set; }
 
     public bool IsActive { get; set; }
-
-    [StringLength(20)]
-    public string JobType { get; set; } = null!;
 
     [StringLength(150)]
     public string CityOffice { get; set; } = null!;
@@ -51,6 +45,10 @@ public partial class Job
     public string Requirements { get; set; } = null!;
 
     public int JobCategoryId { get; set; }
+
+    public int JobTypeId { get; set; }
+
+    public int LocationModeId { get; set; }
 
     [ForeignKey("CompanyId")]
     [InverseProperty("Jobs")]
@@ -74,4 +72,12 @@ public partial class Job
     [ForeignKey("JobCategoryId")]
     [InverseProperty("Jobs")]
     public virtual JobCategory JobCategory { get; set; } = null!;
+
+    [ForeignKey("JobTypeId")]
+    [InverseProperty("Jobs")]
+    public virtual JobType JobType { get; set; } = null!;
+
+    [ForeignKey("LocationModeId")]
+    [InverseProperty("Jobs")]
+    public virtual LocationMode LocationMode { get; set; } = null!;
 }

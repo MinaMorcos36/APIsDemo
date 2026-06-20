@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ProGrow.API.Models;
 
+[Index("CompanyId", IsUnique = true, Name = "UQ_CompanyOverviews_CompanyId")]
 public partial class CompanyOverview
 {
     [Key]

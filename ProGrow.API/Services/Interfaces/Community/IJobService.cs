@@ -9,6 +9,8 @@ namespace ProGrow.API.Services.Interfaces.Community
         Task<List<JobFeedDto>> GetFeedAsync(int? page = null, int? pageSize = null);
         Task<List<CompanysJobDto>> GetJobsAsync(string? filter = null, int? page = null, int? pageSize = null);
         Task<List<JobCategoryDto>> GetJobCategoriesAsync();
+        Task<List<JobTypeDto>> GetJobTypesAsync();
+        Task<List<LocationModeDto>> GetLocationModesAsync();
         Task ApplyAsync(int jobId, ApplyJobDto dto, IFormFile cvFile);
         Task<List<JobApplicationDto>> GetApplicationsAsync(int jobId, string? sort = null, int? page = null, int? pageSize = null);
         Task<List<JobApplicationDto>> GetMyApplicationsAsync(string? filter = null, int? page = null, int? pageSize = null);

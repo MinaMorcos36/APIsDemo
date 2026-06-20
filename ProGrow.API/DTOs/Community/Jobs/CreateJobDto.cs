@@ -14,12 +14,10 @@ namespace ProGrow.API.DTOs.Community.Jobs
         public required string ShortDescription { get; set; }
 
         [Required]
-        [StringLength(20)]
-        public required string LocationMode { get; set; }
+        public required int LocationModeId { get; set; }
 
         [Required]
-        [StringLength(20)]
-        public required string JobType { get; set; }
+        public required int JobTypeId { get; set; }
 
         [Required]
         [StringLength(150)]
