@@ -1,3 +1,4 @@
+using System.Linq;
 using ProGrow.API.DTOs.Community.Feed;
 using ProGrow.API.Models;
 using ProGrow.API.Services.Interfaces.Community;
@@ -6,24 +7,21 @@ namespace ProGrow.API.Services.Implementations.Community
 {
     public class CommunityService : ICommunityService
     {
-        private readonly AppDbContext _context;
         private readonly IPostService _postService;
         private readonly IJobService _jobService;
 
         public CommunityService(
-            AppDbContext context,
             IPostService postService,
             IJobService jobService)
         {
-            _context = context;
             _postService = postService;
             _jobService = jobService;
         }
 
-        public async Task<List<FeedItemDto>> GetFeedAsync(int? page = null, int? pageSize = null)
+        public async Task<PagedFeedResponse> GetFeedAsync(int? page = null, int? pageSize = null)
         {
-            var posts = await _postService.GetFeedAsync(page, pageSize);
-            var jobs = await _jobService.GetFeedAsync(page, pageSize);
+            var posts = await _postService.GetFeedAsync();
+            var jobs = await _jobService.GetFeedAsync();
 
             var feed = new List<FeedItemDto>();
 
@@ -41,9 +39,37 @@ namespace ProGrow.API.Services.Implementations.Community
                 Job = j
             }));
 
-            return feed
-                .OrderByDescending(f => f.CreatedAt)
+            var ordered = feed.OrderByDescending(f => f.CreatedAt).ToList();
+
+            // Calculate totals before paging
+            var totalCount = ordered.Count;
+
+            if (pageSize == null || pageSize <= 0)
+            {
+                return new PagedFeedResponse
+                {
+                    Items = ordered,
+                    TotalCount = totalCount,
+                    TotalPages = 1
+                };
+            }
+
+            var size = Math.Min(pageSize.Value, 100);
+            var currentPage = Math.Max(1, page.GetValueOrDefault(1));
+
+            var totalPages = (int)Math.Ceiling((double)totalCount / size);
+
+            var items = ordered
+                .Skip((currentPage - 1) * size)
+                .Take(size)
                 .ToList();
+
+            return new PagedFeedResponse
+            {
+                Items = items,
+                TotalCount = totalCount,
+                TotalPages = Math.Max(1, totalPages)
+            };
         }
     }
 }
