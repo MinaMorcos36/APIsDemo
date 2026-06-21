@@ -94,6 +94,7 @@ builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<IPostLikeService, PostLikeService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IPostSaveService, PostSaveService>();
+builder.Services.AddScoped<IFollowService, FollowService>();
 builder.Services.AddScoped<IJobLikeService, JobLikeService>();
 builder.Services.AddScoped<IJobSaveService, JobSaveService>();
 builder.Services.AddScoped<IUserService, UserService>();

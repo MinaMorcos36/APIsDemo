@@ -74,6 +74,9 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<UserRole> UserRoles { get; set; }
 
     public virtual DbSet<UserSkill> UserSkills { get; set; }
+    public virtual DbSet<UserFollow> UserFollows { get; set; }
+
+    public virtual DbSet<CompanyFollow> CompanyFollows { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -90,6 +93,38 @@ public partial class AppDbContext : DbContext
 
             entity.HasOne(d => d.Job).WithMany(p => p.Comments)
                 .HasConstraintName("FK__Comment__JobId__79B8D9E4");
+        });
+
+        modelBuilder.Entity<UserFollow>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_UserFollows");
+
+            entity.HasIndex(e => new { e.UserId }).HasDatabaseName("IX_UserFollows_UserId");
+            entity.HasIndex(e => new { e.FollowedUserId }).HasDatabaseName("IX_UserFollows_FollowedUserId");
+            entity.HasIndex(e => new { e.FollowedCompanyId }).HasDatabaseName("IX_UserFollows_FollowedCompanyId");
+
+            entity.HasOne(d => d.User).WithMany().HasForeignKey(d => d.UserId).OnDelete(DeleteBehavior.Cascade).HasConstraintName("FK_UserFollows_UserId_Users");
+            entity.HasOne(d => d.FollowedUser).WithMany().HasForeignKey(d => d.FollowedUserId).OnDelete(DeleteBehavior.NoAction).HasConstraintName("FK_UserFollows_FollowedUserId_Users");
+            entity.HasOne(d => d.FollowedCompany).WithMany().HasForeignKey(d => d.FollowedCompanyId).OnDelete(DeleteBehavior.NoAction).HasConstraintName("FK_UserFollows_FollowedCompanyId_Companies");
+
+            // Ensure exactly one of FollowedUserId and FollowedCompanyId is not null
+            entity.HasCheckConstraint("CK_UserFollows_Target", "(CASE WHEN [FollowedUserId] IS NOT NULL THEN 1 ELSE 0 END) + (CASE WHEN [FollowedCompanyId] IS NOT NULL THEN 1 ELSE 0 END) = 1");
+        });
+
+        modelBuilder.Entity<CompanyFollow>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_CompanyFollows");
+
+            entity.HasIndex(e => new { e.CompanyId }).HasDatabaseName("IX_CompanyFollows_CompanyId");
+            entity.HasIndex(e => new { e.FollowedUserId }).HasDatabaseName("IX_CompanyFollows_FollowedUserId");
+            entity.HasIndex(e => new { e.FollowedCompanyId }).HasDatabaseName("IX_CompanyFollows_FollowedCompanyId");
+
+            entity.HasOne(d => d.Company).WithMany().HasForeignKey(d => d.CompanyId).OnDelete(DeleteBehavior.Cascade).HasConstraintName("FK_CompanyFollows_CompanyId_Companies");
+            entity.HasOne(d => d.FollowedUser).WithMany().HasForeignKey(d => d.FollowedUserId).OnDelete(DeleteBehavior.NoAction).HasConstraintName("FK_CompanyFollows_FollowedUserId_Users");
+            entity.HasOne(d => d.FollowedCompany).WithMany().HasForeignKey(d => d.FollowedCompanyId).OnDelete(DeleteBehavior.NoAction).HasConstraintName("FK_CompanyFollows_FollowedCompanyId_Companies");
+
+            // Ensure exactly one of FollowedUserId and FollowedCompanyId is not null
+            entity.HasCheckConstraint("CK_CompanyFollows_Target", "(CASE WHEN [FollowedUserId] IS NOT NULL THEN 1 ELSE 0 END) + (CASE WHEN [FollowedCompanyId] IS NOT NULL THEN 1 ELSE 0 END) = 1");
         });
 
         modelBuilder.Entity<CommentLike>(entity =>
