@@ -24,5 +24,6 @@ namespace ProGrow.API.DTOs.Community.Jobs
         public required string AboutRole { get; set; }
         public required string Responsibilities { get; set; }
         public required string Requirements { get; set; }
+        public required List<string> RequiredSkills { get; set; }
     }
 }

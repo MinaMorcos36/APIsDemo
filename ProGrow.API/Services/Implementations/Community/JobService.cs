@@ -185,6 +185,10 @@ namespace ProGrow.API.Services.Implementations.Community
                 AboutRole = dto.AboutRole,
                 Responsibilities = dto.Responsibilities,
                 Requirements = dto.Requirements,
+                RequiredSkills = await _context.Skills
+                    .Where(s => dto.RequiredSkillIds.Contains(s.Id))
+                    .Select(s => s.Name)
+                    .ToListAsync()
             };
         }
 
@@ -204,49 +208,61 @@ namespace ProGrow.API.Services.Implementations.Community
                         Description = j.AboutRole,
                         Location = j.CityOffice,
                         ShortDescription = j.ShortDescription,
-                        LocationMode = _context.LocationModes.Where(l => l.Id == j.LocationModeId).Select(l => l.Name).FirstOrDefault() ?? string.Empty,
-                        JobType = _context.JobTypes.Where(t => t.Id == j.JobTypeId).Select(t => t.Name).FirstOrDefault() ?? string.Empty,
+                        LocationMode = _context.LocationModes
+                            .Where(l => l.Id == j.LocationModeId)
+                            .Select(l => l.Name)
+                            .FirstOrDefault() ?? string.Empty,
+                        JobType = _context.JobTypes
+                            .Where(t => t.Id == j.JobTypeId)
+                            .Select(t => t.Name)
+                            .FirstOrDefault() ?? string.Empty,
                         CityOffice = j.CityOffice,
                         JobCategoryId = j.JobCategoryId,
-                    JobCategoryName = _context.JobCategories
-                        .Where(c => c.Id == j.JobCategoryId)
-                        .Select(c => c.Name)
-                        .FirstOrDefault() ?? string.Empty,
-                    SalaryFrom = j.SalaryFrom,
-                    SalaryTo = j.SalaryTo,
-                    IsSalaryInInterview = j.SalaryInInterview,
-                    BannerImageUrl = j.BannerImageUrl,
-                    AboutRole = j.AboutRole,
-                    Responsibilities = j.Responsibilities,
-                    Requirements = j.Requirements,
-                    CreatedAt = j.CreatedAt,
-                    UpdatedAt = j.UpdatedAt,
+                        JobCategoryName = _context.JobCategories
+                            .Where(c => c.Id == j.JobCategoryId)
+                            .Select(c => c.Name)
+                            .FirstOrDefault() ?? string.Empty,
+                        RequiredSkills = j.JobSkills
+                            .Select(js => js.Skill.Name)
+                            .ToList(),
+                        SalaryFrom = j.SalaryFrom,
+                        SalaryTo = j.SalaryTo,
+                        IsSalaryInInterview = j.SalaryInInterview,
+                        BannerImageUrl = j.BannerImageUrl,
+                        AboutRole = j.AboutRole,
+                        Responsibilities = j.Responsibilities,
+                        Requirements = j.Requirements,
+                        CreatedAt = j.CreatedAt,
+                        UpdatedAt = j.UpdatedAt,
 
-                    CompanyId = j.CompanyId,
-                    CompanyName = _context.CompanyOverviews
-                        .Where(co => co.CompanyId == j.CompanyId)
-                        .Select(co => co.Name)
-                        .FirstOrDefault() ?? string.Empty,
-                    CompanyPictureUrl = _context.CompanyOverviews
-                        .Where(co => co.CompanyId == j.CompanyId)
-                        .Select(co => co.PictureUrl)
-                        .FirstOrDefault(),
-                    CompanyIndustry = _context.CompanyOverviews
-                        .Where(co => co.CompanyId == j.CompanyId)
-                        .Select(co => co.Industry.Name)
-                        .FirstOrDefault(),
+                        CompanyId = j.CompanyId,
+                        CompanyName = _context.CompanyOverviews
+                            .Where(co => co.CompanyId == j.CompanyId)
+                            .Select(co => co.Name)
+                            .FirstOrDefault() ?? string.Empty,
+                        CompanyPictureUrl = _context.CompanyOverviews
+                            .Where(co => co.CompanyId == j.CompanyId)
+                            .Select(co => co.PictureUrl)
+                            .FirstOrDefault(),
+                        CompanyIndustry = _context.CompanyOverviews
+                            .Where(co => co.CompanyId == j.CompanyId)
+                            .Select(co => co.Industry.Name)
+                            .FirstOrDefault(),
 
-                    LikesCount = j.JobLikes.Count,
-                    SavesCount = j.JobSaves.Count,
+                        LikesCount = j.JobLikes.Count,
+                        SavesCount = j.JobSaves.Count,
 
-                    ApplicantsCount = j.JobApplications.Count,
-                    CommentsCount = j.Comments.Count,
-                    IsAppliedByMe = j.JobApplications.Any(a => a.ApplicantId == authorId),
-                    IsActive = j.IsActive,
-                    IsLikedByMe = j.JobLikes.Any(l => l.AuthorId == authorId && l.AuthorType == authorType),
-                    IsSavedByMe = j.JobSaves.Any(s => s.AuthorId == authorId && s.AuthorType == authorType)
+                        ApplicantsCount = j.JobApplications.Count,
+                        CommentsCount = j.Comments.Count,
+                        IsAppliedByMe = j.JobApplications
+                            .Any(a => a.ApplicantId == authorId),
+                        IsActive = j.IsActive,
+                        IsLikedByMe = j.JobLikes
+                            .Any(l => l.AuthorId == authorId && l.AuthorType == authorType),
+                        IsSavedByMe = j.JobSaves
+                            .Any(s => s.AuthorId == authorId && s.AuthorType == authorType)
                 })
-                .ToListAsync();
+                    .ToListAsync();
 
             return jobs;
         }
@@ -633,8 +649,14 @@ namespace ProGrow.API.Services.Implementations.Community
                     JobDescription = a.Job.AboutRole,
                     JobLocation = a.Job.CityOffice,
                     JobShortDescription = a.Job.ShortDescription,
-                    JobLocationMode = _context.LocationModes.Where(l => l.Id == a.Job.LocationModeId).Select(l => l.Name).FirstOrDefault(),
-                    JobType = _context.JobTypes.Where(t => t.Id == a.Job.JobTypeId).Select(t => t.Name).FirstOrDefault(),
+                    JobLocationMode = _context.LocationModes
+                        .Where(l => l.Id == a.Job.LocationModeId)
+                        .Select(l => l.Name)
+                        .FirstOrDefault(),
+                    JobType = _context.JobTypes
+                        .Where(t => t.Id == a.Job.JobTypeId)
+                        .Select(t => t.Name)
+                        .FirstOrDefault(),
                     JobCityOffice = a.Job.CityOffice,
                     JobSalaryFrom = a.Job.SalaryFrom,
                     JobSalaryTo = a.Job.SalaryTo,
@@ -658,7 +680,10 @@ namespace ProGrow.API.Services.Implementations.Community
                         .Where(p => p.UserId == a.ApplicantId)
                         .Select(p => p.Headline)
                         .FirstOrDefault() ?? string.Empty,
-                    ApplicantEmail = _context.Users.Where(u => u.Id == a.ApplicantId).Select(u => u.Email).FirstOrDefault()!,
+                    ApplicantEmail = _context.Users
+                        .Where(u => u.Id == a.ApplicantId)
+                        .Select(u => u.Email)
+                        .FirstOrDefault()!,
                     CvId = a.CvId,
                     CvFileName = a.CvFileName,
                     CvScore = a.CvScore,
@@ -742,8 +767,14 @@ namespace ProGrow.API.Services.Implementations.Community
                 UpdatedAt = job.UpdatedAt,
                 IsActive = isActive,
                 ShortDescription = job.ShortDescription,
-                LocationMode = _context.LocationModes.Where(l => l.Id == job.LocationModeId).Select(l => l.Name).FirstOrDefault() ?? string.Empty,
-                JobType = _context.JobTypes.Where(t => t.Id == job.JobTypeId).Select(t => t.Name).FirstOrDefault() ?? string.Empty,
+                LocationMode = _context.LocationModes
+                    .Where(l => l.Id == job.LocationModeId)
+                    .Select(l => l.Name)
+                    .FirstOrDefault() ?? string.Empty,
+                JobType = _context.JobTypes
+                    .Where(t => t.Id == job.JobTypeId)
+                    .Select(t => t.Name)
+                    .FirstOrDefault() ?? string.Empty,
                 CityOffice = job.CityOffice,
                 JobCategoryId = job.JobCategoryId,
                 JobCategoryName = _context.JobCategories
@@ -757,6 +788,10 @@ namespace ProGrow.API.Services.Implementations.Community
                 AboutRole = job.AboutRole,
                 Responsibilities = job.Responsibilities,
                 Requirements = job.Requirements,
+                RequiredSkills = await _context.JobSkills
+                    .Where(js => js.JobId == job.Id)
+                    .Select(js => js.Skill.Name)
+                    .ToListAsync()
             };
         }
 
@@ -783,8 +818,14 @@ namespace ProGrow.API.Services.Implementations.Community
                 CompanyPictureUrl = companyOverview?.PictureUrl,
                 CityOffice = job.CityOffice,
                 Title = job.Title,
-                LocationMode = _context.LocationModes.Where(l => l.Id == job.LocationModeId).Select(l => l.Name).FirstOrDefault() ?? string.Empty,
-                JobType = _context.JobTypes.Where(t => t.Id == job.JobTypeId).Select(t => t.Name).FirstOrDefault() ?? string.Empty,
+                LocationMode = _context.LocationModes
+                    .Where(l => l.Id == job.LocationModeId)
+                    .Select(l => l.Name)
+                    .FirstOrDefault() ?? string.Empty,
+                JobType = _context.JobTypes
+                    .Where(t => t.Id == job.JobTypeId)
+                    .Select(t => t.Name)
+                    .FirstOrDefault() ?? string.Empty,
                 JobCategoryId = job.JobCategoryId,
                 JobCategoryName = _context.JobCategories
                     .Where(c => c.Id == job.JobCategoryId)
@@ -793,10 +834,11 @@ namespace ProGrow.API.Services.Implementations.Community
                 SalaryFrom = job.SalaryFrom,
                 SalaryTo = job.SalaryTo,
                 IsSalaryInInterview = job.SalaryInInterview,
-                RequiredSkills = job.JobSkills.Select(js => js.Skill.Name).ToList(),
+                RequiredSkills = job.JobSkills
+                    .Select(js => js.Skill.Name).ToList(),
                 AboutRole = job.AboutRole,
                 Responsibilities = job.Responsibilities,
-                Requirements = job.Requirements
+                Requirements = job.Requirements,
             };
         }
 
