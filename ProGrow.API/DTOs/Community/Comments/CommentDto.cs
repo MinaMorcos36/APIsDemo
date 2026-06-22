@@ -6,6 +6,8 @@ namespace ProGrow.API.DTOs.Community.Comments
         public string Content { get; set; } = null!;
         public int AuthorId { get; set; }
         public string? AuthorType { get; set; }
+        public string? AuthorName { get; set; }
+        public string? AuthorPictureUrl { get; set; }
         public DateTime? CreatedAt { get; set; }
         public List<CommentDto>? Replies { get; set; }
     }

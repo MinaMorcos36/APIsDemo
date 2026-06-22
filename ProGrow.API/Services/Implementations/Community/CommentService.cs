@@ -83,6 +83,29 @@ namespace ProGrow.API.Services.Implementations.Community
                 Content = c.Content,
                 AuthorId = c.AuthorId,
                 AuthorType = c.AuthorType,
+                AuthorName = c.AuthorType == "JobSeeker"
+                    ? _context.UserProfiles
+                        .Where(up => up.UserId == c.AuthorId)
+                        .Select(up => ((up.FirstName ?? string.Empty) + " " + (up.LastName ?? string.Empty)).Trim())
+                        .FirstOrDefault() ?? string.Empty
+                    : c.AuthorType == "Recruiter"
+                        ? _context.CompanyOverviews
+                            .Where(co => co.CompanyId == c.AuthorId)
+                            .Select(co => co.Name)
+                            .FirstOrDefault() ?? string.Empty
+                        : string.Empty,
+
+                AuthorPictureUrl = c.AuthorType == "JobSeeker"
+                    ? _context.UserProfiles
+                        .Where(up => up.UserId == c.AuthorId)
+                        .Select(up => up.PictureUrl)
+                        .FirstOrDefault()
+                    : c.AuthorType == "Recruiter"
+                        ? _context.CompanyOverviews
+                            .Where(co => co.CompanyId == c.AuthorId)
+                            .Select(co => co.PictureUrl)
+                            .FirstOrDefault()
+                        : null,
                 CreatedAt = c.CreatedAt,
                 Replies = c.InverseParentComment.Select(r => new CommentDto
                 {
@@ -90,6 +113,29 @@ namespace ProGrow.API.Services.Implementations.Community
                     Content = r.Content,
                     AuthorId = r.AuthorId,
                     AuthorType = r.AuthorType,
+                    AuthorName = r.AuthorType == "JobSeeker"
+                        ? _context.UserProfiles
+                            .Where(up => up.UserId == r.AuthorId)
+                            .Select(up => ((up.FirstName ?? string.Empty) + " " + (up.LastName ?? string.Empty)).Trim())
+                            .FirstOrDefault() ?? string.Empty
+                        : r.AuthorType == "Recruiter"
+                            ? _context.CompanyOverviews
+                                .Where(co => co.CompanyId == r.AuthorId)
+                                .Select(co => co.Name)
+                                .FirstOrDefault() ?? string.Empty
+                            : string.Empty,
+
+                    AuthorPictureUrl = r.AuthorType == "JobSeeker"
+                        ? _context.UserProfiles
+                            .Where(up => up.UserId == r.AuthorId)
+                            .Select(up => up.PictureUrl)
+                            .FirstOrDefault()
+                        : r.AuthorType == "Recruiter"
+                            ? _context.CompanyOverviews
+                                .Where(co => co.CompanyId == r.AuthorId)
+                                .Select(co => co.PictureUrl)
+                                .FirstOrDefault()
+                            : null,
                     CreatedAt = r.CreatedAt
                 }).ToList()
             });
