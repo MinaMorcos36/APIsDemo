@@ -52,5 +52,10 @@ namespace ProGrow.API.Controllers.Admin
         {
             return await _adminService.DeleteSkillAsync(id);
         }
+        [HttpGet("dashboard")]
+        public async Task<IActionResult> GetDashboard()
+        {
+            return await _adminService.GetDashboardAsync();
+        }
     }
 }
