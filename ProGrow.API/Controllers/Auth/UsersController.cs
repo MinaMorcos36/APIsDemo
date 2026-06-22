@@ -10,6 +10,7 @@ namespace ProGrow.API.Controllers.Auth
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class UsersController : ControllerBase
     {
         private readonly IUserService _userService;
