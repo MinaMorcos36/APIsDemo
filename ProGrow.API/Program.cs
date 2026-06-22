@@ -109,6 +109,8 @@ builder.Services.AddScoped<CvProcessingService>();
 builder.Services.AddScoped<GeminiCvEvaluationService>();
 builder.Services.AddScoped<CareerChatService>();
 
+
+
 var app = builder.Build();
 
 app.UseExceptionHandler();

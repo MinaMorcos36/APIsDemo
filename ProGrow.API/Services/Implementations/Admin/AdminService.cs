@@ -1,4 +1,6 @@
+using ProGrow.API.DTOs.Admin.Dashboard;
 using ProGrow.API.DTOs.Admin;
+
 using ProGrow.API.Models;
 using ProGrow.API.Services.Interfaces.Admin;
 using Microsoft.AspNetCore.Mvc;
@@ -128,6 +130,134 @@ namespace ProGrow.API.Services.Implementations.Admin
             await _context.SaveChangesAsync();
 
             return new OkObjectResult("Skill deleted successfully.");
+        }
+
+        public async Task<IActionResult> GetDashboardAsync()
+        {
+            var totalUsers = await _context.Users.CountAsync();
+            var totalCompanies = await _context.Companies.CountAsync();
+            var totalJobs = await _context.Jobs.CountAsync();
+            var totalApplications = await _context.JobApplications.CountAsync();
+
+            var approvedCompanies = await _context.Companies.CountAsync(c => c.IsActive == true);
+
+            var pendingCompanies = await _context.Companies.CountAsync(
+                c => c.IsActive == false && c.IsDeclined == false
+            );
+
+            var rejectedCompanies = await _context.Companies.CountAsync(
+                c => c.IsDeclined == true
+            );
+                var applicationStatuses = await _context.JobApplicationStatuses
+        .Select(status => new StatusCountDto
+        {
+            Name = status.Name!,
+            Count = status.JobApplications.Count()
+        })
+        .ToListAsync();
+
+            var last7Days = DateTime.UtcNow.Date.AddDays(-6);
+
+            var jobsData = await _context.Jobs
+                .Where(j => j.CreatedAt >= last7Days)
+                .GroupBy(j => j.CreatedAt.Date)
+                .Select(g => new
+                {
+                    Date = g.Key,
+                    Count = g.Count()
+                })
+                .ToListAsync();
+
+            var jobsTrend = Enumerable.Range(0, 7)
+                .Select(i =>
+                {
+                    var day = last7Days.AddDays(i);
+
+                    return new TrendDto
+                    {
+                        Label = day.ToString("ddd"),
+                        Count = jobsData
+                            .FirstOrDefault(x => x.Date == day)?.Count ?? 0
+                    };
+                })
+                .ToList();
+            var applicationsData = await _context.JobApplications
+    .Where(a =>
+        a.CreatedAt.HasValue &&
+        a.CreatedAt.Value.Date >= last7Days)
+    .GroupBy(a => a.CreatedAt!.Value.Date)
+    .Select(g => new
+    {
+        Date = g.Key,
+        Count = g.Count()
+    })
+    .ToListAsync();
+
+            var applicationsTrend = Enumerable.Range(0, 7)
+                .Select(i =>
+                {
+                    var day = last7Days.AddDays(i);
+
+                    return new TrendDto
+                    {
+                        Label = day.ToString("ddd"),
+                        Count = applicationsData
+                            .FirstOrDefault(x => x.Date == day)?.Count ?? 0
+                    };
+                })
+                .ToList();
+            var recentJobs = await _context.Jobs
+    .OrderByDescending(j => j.CreatedAt)
+    .Take(5)
+    .Select(j => new RecentJobDto
+    {
+        JobId = j.Id,
+        Title = j.Title,
+        CreatedAt = j.CreatedAt
+    })
+    .ToListAsync();
+
+            var topCompanies = await _context.Companies
+    .Select(c => new TopCompanyDto
+    {
+        CompanyId = c.Id,
+
+        Name = c.CompanyOverviews
+            .Select(o => o.Name)
+            .FirstOrDefault() ?? "Unknown",
+
+        JobsCount = c.Jobs.Count(),
+
+        ApplicationsCount = c.Jobs
+            .SelectMany(j => j.JobApplications)
+            .Count(),
+
+        Status = c.IsDeclined
+            ? "Rejected"
+            : c.IsActive
+                ? "Approved"
+                : "Pending"
+    })
+    .OrderByDescending(c => c.ApplicationsCount)
+    .Take(5)
+    .ToListAsync();
+            var dashboard = new DashboardDto
+            {
+                TotalUsers = totalUsers,
+                TotalCompanies = totalCompanies,
+                TotalJobs = totalJobs,
+                TotalApplications = totalApplications,
+                ApprovedCompanies = approvedCompanies,
+                PendingCompanies = pendingCompanies,
+                RejectedCompanies = rejectedCompanies,
+                ApplicationStatuses = applicationStatuses,
+                JobsTrend = jobsTrend,
+                ApplicationsTrend = applicationsTrend,
+                RecentJobs = recentJobs,
+                TopCompanies = topCompanies,
+            };
+
+            return new OkObjectResult(dashboard);
         }
     }
 }

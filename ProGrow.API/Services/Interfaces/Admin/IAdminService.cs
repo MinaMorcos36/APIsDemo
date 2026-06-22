@@ -11,5 +11,6 @@ namespace ProGrow.API.Services.Interfaces.Admin
         Task<IActionResult> DeclineCompanyAsync(int companyId);
         Task<IActionResult> GetSkillsAsync();
         Task<IActionResult> DeleteSkillAsync(int skillId);
+        Task<IActionResult> GetDashboardAsync();
     }
 }
