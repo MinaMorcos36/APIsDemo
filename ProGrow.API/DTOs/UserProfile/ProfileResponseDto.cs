@@ -15,5 +15,6 @@ namespace ProGrow.API.DTOs.UserProfile
         public string? Phone { get; set; }
         public DateOnly? Birthdate { get; set; }
         public string? Address { get; set; }
+        public bool IsFollowedByMe { get; set; }
     }
 }

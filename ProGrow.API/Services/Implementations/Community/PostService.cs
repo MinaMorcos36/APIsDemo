@@ -141,6 +141,15 @@ namespace ProGrow.API.Services.Implementations.Community
                     IsSavedByMe = p.PostSaves.Any(s =>
                         s.AuthorId == authorId &&
                         s.AuthorType == authorType),
+                    IsFollowedByMe = p.AuthorType == "JobSeeker"
+                        ? (authorType == "JobSeeker"
+                            ? _context.UserFollows.Any(uf => uf.UserId == authorId && uf.FollowedUserId == p.AuthorId)
+                            : _context.CompanyFollows.Any(cf => cf.CompanyId == authorId && cf.FollowedUserId == p.AuthorId))
+                        : p.AuthorType == "Recruiter"
+                            ? (authorType == "JobSeeker"
+                                ? _context.UserFollows.Any(uf => uf.UserId == authorId && uf.FollowedCompanyId == p.AuthorId)
+                                : _context.CompanyFollows.Any(cf => cf.CompanyId == authorId && cf.FollowedCompanyId == p.AuthorId))
+                            : false,
 
                     AuthorName = p.AuthorType == "JobSeeker"
                         ? _context.UserProfiles

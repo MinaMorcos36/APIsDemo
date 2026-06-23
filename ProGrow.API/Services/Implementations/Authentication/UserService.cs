@@ -491,6 +491,15 @@ namespace ProGrow.API.Services.Implementations.Authentication
                         CommentsCount = sp.Post.Comments.Count,
                         IsLikedByMe = sp.Post.PostLikes.Any(l => l.AuthorId == authorId.Value && l.AuthorType == authorType),
                         IsSavedByMe = true,
+                        IsFollowedByMe = sp.Post.AuthorType == "JobSeeker"
+                            ? (authorType == "JobSeeker"
+                                ? _context.UserFollows.Any(uf => uf.UserId == authorId.Value && uf.FollowedUserId == sp.Post.AuthorId)
+                                : _context.CompanyFollows.Any(cf => cf.CompanyId == authorId.Value && cf.FollowedUserId == sp.Post.AuthorId))
+                            : sp.Post.AuthorType == "Recruiter"
+                                ? (authorType == "JobSeeker"
+                                    ? _context.UserFollows.Any(uf => uf.UserId == authorId.Value && uf.FollowedCompanyId == sp.Post.AuthorId)
+                                    : _context.CompanyFollows.Any(cf => cf.CompanyId == authorId.Value && cf.FollowedCompanyId == sp.Post.AuthorId))
+                                : false,
                         AuthorName = sp.Post.AuthorType == "JobSeeker"
                             ? _context.UserProfiles
                                 .Where(up => up.UserId == sp.Post.AuthorId)
@@ -581,6 +590,10 @@ namespace ProGrow.API.Services.Implementations.Authentication
                         IsActive = js.Job.IsActive,
                         IsLikedByMe = js.Job.JobLikes.Any(l => l.AuthorId == authorId.Value && l.AuthorType == authorType),
                         IsSavedByMe = true
+                        ,
+                        IsFollowedByMe = authorType == "JobSeeker"
+                            ? _context.UserFollows.Any(uf => uf.UserId == authorId.Value && uf.FollowedCompanyId == js.Job.CompanyId)
+                            : _context.CompanyFollows.Any(cf => cf.CompanyId == authorId.Value && cf.FollowedCompanyId == js.Job.CompanyId)
                     }
                 })
                 .ToListAsync();

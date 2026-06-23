@@ -251,6 +251,9 @@ namespace ProGrow.API.Services.Implementations.Community
 
                         LikesCount = j.JobLikes.Count,
                         SavesCount = j.JobSaves.Count,
+                        IsFollowedByMe = authorType == "JobSeeker"
+                            ? _context.UserFollows.Any(uf => uf.UserId == authorId && uf.FollowedCompanyId == j.CompanyId)
+                            : _context.CompanyFollows.Any(cf => cf.CompanyId == authorId && cf.FollowedCompanyId == j.CompanyId),
 
                         ApplicantsCount = j.JobApplications.Count,
                         CommentsCount = j.Comments.Count,
@@ -379,6 +382,9 @@ namespace ProGrow.API.Services.Implementations.Community
                     ApplicantsTotalCount = j.JobApplications.Count,
                     IsLikedByMe = j.JobLikes.Any(l => l.AuthorId == authorId && l.AuthorType == authorType),
                     IsSavedByMe = j.JobSaves.Any(s => s.AuthorId == authorId && s.AuthorType == authorType),
+                    IsFollowedByMe = authorType == "JobSeeker"
+                        ? _context.UserFollows.Any(uf => uf.UserId == authorId && uf.FollowedCompanyId == j.CompanyId)
+                        : _context.CompanyFollows.Any(cf => cf.CompanyId == authorId && cf.FollowedCompanyId == j.CompanyId),
                     ApplicantAvatarUrls = j.JobApplications
                         .OrderByDescending(a => a.CreatedAt)
                         .Select(a => _context.UserProfiles

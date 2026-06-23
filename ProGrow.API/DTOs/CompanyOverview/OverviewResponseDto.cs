@@ -11,5 +11,6 @@ namespace ProGrow.API.DTOs.CompanyOverview
         public string? Overview { get; set; }
         public string? WebsiteUrl { get; set; }
         public string? PictureUrl { get; set; }
+        public bool IsFollowedByMe { get; set; }
     }
 }

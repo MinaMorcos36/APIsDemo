@@ -19,5 +19,6 @@ namespace ProGrow.API.DTOs.Community.Posts
 
             public bool IsLikedByMe { get; set; }
             public bool IsSavedByMe { get; set; }
+            public bool IsFollowedByMe { get; set; }
             }
         }

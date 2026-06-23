@@ -32,6 +32,7 @@ namespace ProGrow.API.DTOs.Community.Jobs
         public int SavesCount { get; set; }
         public bool IsLikedByMe { get; set; }
         public bool IsSavedByMe { get; set; }
+        public bool IsFollowedByMe { get; set; }
 
         public int ApplicantsCount { get; set; }
         public int CommentsCount { get; set; }
