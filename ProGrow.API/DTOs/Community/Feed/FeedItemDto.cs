@@ -13,5 +13,8 @@ namespace ProGrow.API.DTOs.Community.Feed
         public PostFeedDto? Post { get; set; }
 
         public JobFeedDto? Job { get; set; }
+
+        // Convenience flag for frontend: whether the current viewer follows the item author
+        public bool IsFollowedByMe { get; set; }
     }
 }

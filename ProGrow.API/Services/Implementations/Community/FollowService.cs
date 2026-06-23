@@ -15,9 +15,7 @@ namespace ProGrow.API.Services.Implementations.Community
         private readonly AppDbContext _context;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public FollowService(
-            AppDbContext context,
-            IHttpContextAccessor httpContextAccessor)
+        public FollowService(AppDbContext context, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _httpContextAccessor = httpContextAccessor;
@@ -25,17 +23,14 @@ namespace ProGrow.API.Services.Implementations.Community
 
         private int GetAuthorId()
         {
-            return int.Parse(
-                _httpContextAccessor.HttpContext!
-                .User
-                .FindFirst(ClaimTypes.NameIdentifier)!
-                .Value);
+            return int.Parse(_httpContextAccessor.HttpContext!.User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         }
 
         public async Task<bool> ToggleUserFollowAsync(int targetUserId)
         {
             var authorId = GetAuthorId();
-            var existing = await EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(_context.UserFollows, x => x.UserId == authorId && x.FollowedUserId == targetUserId);
+            var existing = await _context.UserFollows
+                .FirstOrDefaultAsync(ufu => ufu.UserId == authorId && ufu.FollowedUserId == targetUserId);
             if (existing != null)
             {
                 _context.UserFollows.Remove(existing);
@@ -46,7 +41,8 @@ namespace ProGrow.API.Services.Implementations.Community
             if (authorId == targetUserId)
                 throw new BadHttpRequestException("Cannot follow yourself.");
 
-            var exists = await EntityFrameworkQueryableExtensions.AnyAsync(_context.Users, u => u.Id == targetUserId);
+            var exists = await _context.Users
+                .AnyAsync(u => u.Id == targetUserId);
             if (!exists)
                 throw new KeyNotFoundException("Target user not found.");
 
@@ -64,7 +60,8 @@ namespace ProGrow.API.Services.Implementations.Community
         public async Task<bool> ToggleCompanyFollowAsync(int targetCompanyId)
         {
             var authorId = GetAuthorId();
-            var existing = await EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(_context.UserFollows, x => x.UserId == authorId && x.FollowedCompanyId == targetCompanyId);
+            var existing = await _context.UserFollows
+                .FirstOrDefaultAsync(ufc => ufc.UserId == authorId && ufc.FollowedCompanyId == targetCompanyId);
             if (existing != null)
             {
                 _context.UserFollows.Remove(existing);
@@ -72,7 +69,7 @@ namespace ProGrow.API.Services.Implementations.Community
                 return false;
             }
 
-            var exists = await EntityFrameworkQueryableExtensions.AnyAsync(_context.Companies, c => c.Id == targetCompanyId);
+            var exists = await _context.Companies.AnyAsync(c => c.Id == targetCompanyId);
             if (!exists)
                 throw new KeyNotFoundException("Target company not found.");
 
@@ -92,7 +89,8 @@ namespace ProGrow.API.Services.Implementations.Community
         public async Task<bool> ToggleCompanyFollowUserAsync(int targetUserId)
         {
             var companyId = GetAuthorId();
-            var existing = await EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(_context.CompanyFollows, x => x.CompanyId == companyId && x.FollowedUserId == targetUserId);
+            var existing = await _context.CompanyFollows
+                .FirstOrDefaultAsync(cfu => cfu.CompanyId == companyId && cfu.FollowedUserId == targetUserId);
             if (existing != null)
             {
                 _context.CompanyFollows.Remove(existing);
@@ -100,7 +98,7 @@ namespace ProGrow.API.Services.Implementations.Community
                 return false;
             }
 
-            var exists = await EntityFrameworkQueryableExtensions.AnyAsync(_context.Users, u => u.Id == targetUserId);
+            var exists = await _context.Users.AnyAsync(u => u.Id == targetUserId);
             if (!exists)
                 throw new KeyNotFoundException("Target user not found.");
 
@@ -119,7 +117,8 @@ namespace ProGrow.API.Services.Implementations.Community
         {
             var companyId = GetAuthorId();
 
-            var existing = await EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(_context.CompanyFollows, x => x.CompanyId == companyId && x.FollowedCompanyId == targetCompanyId);
+            var existing = await _context.CompanyFollows
+                .FirstOrDefaultAsync(cfc => cfc.CompanyId == companyId && cfc.FollowedCompanyId == targetCompanyId);
             if (existing != null)
             {
                 _context.CompanyFollows.Remove(existing);
@@ -130,7 +129,7 @@ namespace ProGrow.API.Services.Implementations.Community
             if (companyId == targetCompanyId)
                 throw new BadHttpRequestException("Cannot follow yourself.");
 
-            var exists = await EntityFrameworkQueryableExtensions.AnyAsync(_context.Companies, c => c.Id == targetCompanyId);
+            var exists = await _context.Companies.AnyAsync(c => c.Id == targetCompanyId);
             if (!exists)
                 throw new KeyNotFoundException("Target company not found.");
 
@@ -151,18 +150,18 @@ namespace ProGrow.API.Services.Implementations.Community
 
         public async Task<ProfileCountsDto> GetUserProfileCountsAsync(int userId)
         {
-            var exists = await EntityFrameworkQueryableExtensions.AnyAsync(_context.Users, u => u.Id == userId);
+            var exists = await _context.Users.AnyAsync(u => u.Id == userId);
 
             if (!exists)
                 throw new KeyNotFoundException("User not found.");
 
             var followers =
-                await EntityFrameworkQueryableExtensions.CountAsync(_context.UserFollows, x => x.FollowedUserId == userId)
-                + await EntityFrameworkQueryableExtensions.CountAsync(_context.CompanyFollows, x => x.FollowedUserId == userId);
+                await _context.UserFollows.CountAsync(x => x.FollowedUserId == userId)
+                + await _context.CompanyFollows.CountAsync(x => x.FollowedUserId == userId);
 
             var followings =
-                await EntityFrameworkQueryableExtensions.CountAsync(_context.UserFollows, x => x.UserId == userId && x.FollowedUserId != null)
-                + await EntityFrameworkQueryableExtensions.CountAsync(_context.UserFollows, x => x.UserId == userId && x.FollowedCompanyId != null);
+                await _context.UserFollows.CountAsync(x => x.UserId == userId && x.FollowedUserId != null)
+                + await _context.UserFollows.CountAsync(x => x.UserId == userId && x.FollowedCompanyId != null);
 
             return new ProfileCountsDto
             {
@@ -173,18 +172,18 @@ namespace ProGrow.API.Services.Implementations.Community
 
         public async Task<ProfileCountsDto> GetCompanyOverviewCountsAsync(int companyId)
         {
-            var exists = await EntityFrameworkQueryableExtensions.AnyAsync(_context.Companies, c => c.Id == companyId);
+            var exists = await _context.Companies.AnyAsync(c => c.Id == companyId);
 
             if (!exists)
                 throw new KeyNotFoundException("Company not found.");
 
             var followers =
-                await EntityFrameworkQueryableExtensions.CountAsync(_context.UserFollows, x => x.FollowedCompanyId == companyId)
-                + await EntityFrameworkQueryableExtensions.CountAsync(_context.CompanyFollows, x => x.FollowedCompanyId == companyId);
+                await _context.UserFollows.CountAsync(x => x.FollowedCompanyId == companyId)
+                + await _context.CompanyFollows.CountAsync(x => x.FollowedCompanyId == companyId);
 
             var followings =
-                await EntityFrameworkQueryableExtensions.CountAsync(_context.CompanyFollows, x => x.CompanyId == companyId && x.FollowedUserId != null)
-                + await EntityFrameworkQueryableExtensions.CountAsync(_context.CompanyFollows, x => x.CompanyId == companyId && x.FollowedCompanyId != null);
+                await _context.CompanyFollows.CountAsync(x => x.CompanyId == companyId && x.FollowedUserId != null)
+                + await _context.CompanyFollows.CountAsync(x => x.CompanyId == companyId && x.FollowedCompanyId != null);
 
             return new ProfileCountsDto
             {

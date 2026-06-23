@@ -29,14 +29,16 @@ namespace ProGrow.API.Services.Implementations.Community
             {
                 Type = "Post",
                 CreatedAt = p.CreatedAt,
-                Post = p
+                Post = p,
+                IsFollowedByMe = p.IsFollowedByMe
             }));
 
             feed.AddRange(jobs.Select(j => new FeedItemDto
             {
                 Type = "Job",
                 CreatedAt = j.CreatedAt,
-                Job = j
+                Job = j,
+                IsFollowedByMe = j.IsFollowedByMe
             }));
 
             var ordered = feed.OrderByDescending(f => f.CreatedAt).ToList();
