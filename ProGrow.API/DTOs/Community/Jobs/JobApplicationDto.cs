@@ -24,7 +24,9 @@ namespace ProGrow.API.DTOs.Community.Jobs
         public int ApplicantId { get; set; }
         public string ApplicantName { get; set; } = string.Empty;
         public string ApplicantHeadline { get; set; } = string.Empty;
+        public string? ApplicantPictureUrl { get; set; }
         public string ApplicantEmail { get; set; } = string.Empty;
+        public string? CompanyPictureUrl { get; set; }
         public int? CvId { get; set; }
         public string CvFileName { get; set; } = string.Empty;
         public string? CvText { get; set; }

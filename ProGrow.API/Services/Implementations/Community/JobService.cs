@@ -581,6 +581,10 @@ namespace ProGrow.API.Services.Implementations.Community
                         .Select(p => (p.FirstName ?? "") + " " + (p.LastName ?? ""))
                         .FirstOrDefault() ?? string.Empty)
                         .Trim(),
+                    ApplicantPictureUrl = _context.UserProfiles
+                        .Where(p => p.UserId == a.ApplicantId)
+                        .Select(p => p.PictureUrl)
+                        .FirstOrDefault(),
                     ApplicantHeadline = _context.UserProfiles
                         .Where(p => p.UserId == a.ApplicantId)
                         .Select(p => p.Headline)
@@ -707,6 +711,10 @@ namespace ProGrow.API.Services.Implementations.Community
                         .Where(p => p.UserId == a.ApplicantId)
                         .Select(p => p.Headline)
                         .FirstOrDefault() ?? string.Empty,
+                    CompanyPictureUrl = _context.CompanyOverviews
+                        .Where(co => co.CompanyId == a.Job.CompanyId)
+                        .Select(co => co.PictureUrl)
+                        .FirstOrDefault(),
                     ApplicantEmail = _context.Users
                         .Where(u => u.Id == a.ApplicantId)
                         .Select(u => u.Email)
