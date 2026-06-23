@@ -547,6 +547,9 @@ namespace ProGrow.API.Services.Implementations.Community
                     JobShortDescription = a.Job.ShortDescription,
                     JobLocationMode = _context.LocationModes.Where(l => l.Id == a.Job.LocationModeId).Select(l => l.Name).FirstOrDefault(),
                     JobType = _context.JobTypes.Where(t => t.Id == a.Job.JobTypeId).Select(t => t.Name).FirstOrDefault(),
+                    RequiredSkillsName = a.Job.JobSkills
+                            .Select(js => js.Skill.Name)
+                            .ToList(),
                     JobCityOffice = a.Job.CityOffice,
                     JobSalaryFrom = a.Job.SalaryFrom,
                     JobSalaryTo = a.Job.SalaryTo,
@@ -663,6 +666,9 @@ namespace ProGrow.API.Services.Implementations.Community
                         .Where(t => t.Id == a.Job.JobTypeId)
                         .Select(t => t.Name)
                         .FirstOrDefault(),
+                    RequiredSkillsName = a.Job.JobSkills
+                            .Select(js => js.Skill.Name)
+                            .ToList(),
                     JobCityOffice = a.Job.CityOffice,
                     JobSalaryFrom = a.Job.SalaryFrom,
                     JobSalaryTo = a.Job.SalaryTo,

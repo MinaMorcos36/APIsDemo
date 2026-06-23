@@ -37,5 +37,6 @@ namespace ProGrow.API.DTOs.Community.Jobs
         public DateTime CreatedAt { get; set; }
         public int StatusId { get; set; }
         public string StatusName { get; set; } = string.Empty;
+        public required List<string> RequiredSkillsName { get; set; }
     }
 }
