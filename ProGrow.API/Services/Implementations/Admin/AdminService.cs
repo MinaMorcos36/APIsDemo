@@ -182,16 +182,14 @@ namespace ProGrow.API.Services.Implementations.Admin
                 })
                 .ToList();
             var applicationsData = await _context.JobApplications
-    .Where(a =>
-        a.CreatedAt.HasValue &&
-        a.CreatedAt.Value.Date >= last7Days)
-    .GroupBy(a => a.CreatedAt!.Value.Date)
-    .Select(g => new
-    {
-        Date = g.Key,
-        Count = g.Count()
-    })
-    .ToListAsync();
+                .Where(a => a.CreatedAt.HasValue && a.CreatedAt.Value.Date >= last7Days)
+                .GroupBy(a => a.CreatedAt!.Value.Date)
+                .Select(g => new
+                {
+                    Date = g.Key,
+                    Count = g.Count()
+                })
+                .ToListAsync();
 
             var applicationsTrend = Enumerable.Range(0, 7)
                 .Select(i =>
@@ -202,20 +200,20 @@ namespace ProGrow.API.Services.Implementations.Admin
                     {
                         Label = day.ToString("ddd"),
                         Count = applicationsData
-                            .FirstOrDefault(x => x.Date == day)?.Count ?? 0
+                                .FirstOrDefault(x => x.Date == day)?.Count ?? 0
                     };
                 })
                 .ToList();
             var recentJobs = await _context.Jobs
-    .OrderByDescending(j => j.CreatedAt)
-    .Take(5)
-    .Select(j => new RecentJobDto
-    {
-        JobId = j.Id,
-        Title = j.Title,
-        CreatedAt = j.CreatedAt
-    })
-    .ToListAsync();
+                .OrderByDescending(j => j.CreatedAt)
+                .Take(5)
+                .Select(j => new RecentJobDto
+                {
+                    JobId = j.Id,
+                    Title = j.Title,
+                    CreatedAt = j.CreatedAt
+                })
+                .ToListAsync();
 
             var topCompanies = await _context.Companies
     .Select(c => new TopCompanyDto

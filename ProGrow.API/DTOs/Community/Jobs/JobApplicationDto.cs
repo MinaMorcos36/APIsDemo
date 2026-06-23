@@ -40,5 +40,7 @@ namespace ProGrow.API.DTOs.Community.Jobs
         public int StatusId { get; set; }
         public string StatusName { get; set; } = string.Empty;
         public required List<string> RequiredSkillsName { get; set; }
+        public bool IsActive { get; set; }
+        public required string JobStatus { get; set; } // Active or Closed
     }
 }

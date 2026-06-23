@@ -562,6 +562,8 @@ namespace ProGrow.API.Services.Implementations.Community
                     RequiredSkillsName = a.Job.JobSkills
                             .Select(js => js.Skill.Name)
                             .ToList(),
+                    IsActive = a.Job.IsActive,
+                    JobStatus = a.Job.IsActive ? "Active" : "Closed",
                     JobCityOffice = a.Job.CityOffice,
                     JobSalaryFrom = a.Job.SalaryFrom,
                     JobSalaryTo = a.Job.SalaryTo,
@@ -575,6 +577,10 @@ namespace ProGrow.API.Services.Implementations.Community
                         .Where(co => co.CompanyId == a.Job.CompanyId)
                         .Select(co => co.Name)
                         .FirstOrDefault() ?? string.Empty,
+                    CompanyPictureUrl = _context.CompanyOverviews
+                        .Where(co => co.CompanyId == a.Job.CompanyId)
+                        .Select(co => co.PictureUrl)
+                        .FirstOrDefault(),
                     ApplicantId = a.ApplicantId,    
                     ApplicantName = (_context.UserProfiles
                         .Where(p => p.UserId == a.ApplicantId)
@@ -688,6 +694,8 @@ namespace ProGrow.API.Services.Implementations.Community
                     RequiredSkillsName = a.Job.JobSkills
                             .Select(js => js.Skill.Name)
                             .ToList(),
+                    IsActive = a.Job.IsActive,
+                    JobStatus = a.Job.IsActive ? "Active" : "Closed",
                     JobCityOffice = a.Job.CityOffice,
                     JobSalaryFrom = a.Job.SalaryFrom,
                     JobSalaryTo = a.Job.SalaryTo,
