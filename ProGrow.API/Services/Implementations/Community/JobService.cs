@@ -349,10 +349,16 @@ namespace ProGrow.API.Services.Implementations.Community
                     Description = j.AboutRole,
                     Location = j.CityOffice,
                     ShortDescription = j.ShortDescription,
-                        LocationMode = _context.LocationModes.Where(l => l.Id == j.LocationModeId).Select(l => l.Name).FirstOrDefault() ?? string.Empty,
-                        JobType = _context.JobTypes.Where(t => t.Id == j.JobTypeId).Select(t => t.Name).FirstOrDefault() ?? string.Empty,
-                        CityOffice = j.CityOffice,
-                        JobCategoryId = j.JobCategoryId,
+                    LocationMode = _context.LocationModes
+                        .Where(l => l.Id == j.LocationModeId)
+                        .Select(l => l.Name)
+                        .FirstOrDefault() ?? string.Empty,
+                    JobType = _context.JobTypes
+                        .Where(t => t.Id == j.JobTypeId)
+                        .Select(t => t.Name)
+                        .FirstOrDefault() ?? string.Empty,
+                    CityOffice = j.CityOffice,
+                    JobCategoryId = j.JobCategoryId,
                     JobCategoryName = _context.JobCategories
                         .Where(c => c.Id == j.JobCategoryId)
                         .Select(c => c.Name)
@@ -545,8 +551,14 @@ namespace ProGrow.API.Services.Implementations.Community
                     JobDescription = a.Job.AboutRole,
                     JobLocation = a.Job.CityOffice,
                     JobShortDescription = a.Job.ShortDescription,
-                    JobLocationMode = _context.LocationModes.Where(l => l.Id == a.Job.LocationModeId).Select(l => l.Name).FirstOrDefault(),
-                    JobType = _context.JobTypes.Where(t => t.Id == a.Job.JobTypeId).Select(t => t.Name).FirstOrDefault(),
+                    JobLocationMode = _context.LocationModes
+                        .Where(l => l.Id == a.Job.LocationModeId)
+                        .Select(l => l.Name)
+                        .FirstOrDefault(),
+                    JobType = _context.JobTypes
+                        .Where(t => t.Id == a.Job.JobTypeId)
+                        .Select(t => t.Name)
+                        .FirstOrDefault(),
                     RequiredSkillsName = a.Job.JobSkills
                             .Select(js => js.Skill.Name)
                             .ToList(),
@@ -573,7 +585,10 @@ namespace ProGrow.API.Services.Implementations.Community
                         .Where(p => p.UserId == a.ApplicantId)
                         .Select(p => p.Headline)
                         .FirstOrDefault() ?? string.Empty,
-                    ApplicantEmail = _context.Users.Where(u => u.Id == a.ApplicantId).Select(u => u.Email).FirstOrDefault()!,
+                    ApplicantEmail = _context.Users
+                        .Where(u => u.Id == a.ApplicantId)
+                        .Select(u => u.Email)
+                        .FirstOrDefault()!,
                     CvId = a.CvId,
                     CvFileName = a.CvFileName,
                     CvScore = a.CvScore,

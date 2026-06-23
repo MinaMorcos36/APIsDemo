@@ -60,7 +60,7 @@ builder.Services.AddAuthentication(options =>
     {
         options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
         options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
-        options.CallbackPath = "/api/auth/google-callback";
+        options.CallbackPath = "/api/Users/google-callback";
     });
 
 builder.Services.AddAuthorization(options =>
