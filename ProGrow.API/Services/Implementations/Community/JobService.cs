@@ -882,6 +882,11 @@ namespace ProGrow.API.Services.Implementations.Community
                 AboutRole = job.AboutRole,
                 Responsibilities = job.Responsibilities,
                 Requirements = job.Requirements,
+                BannerImageUrl = job.BannerImageUrl,
+                IsActive = job.IsActive,
+                TotalApplications = await _context.JobApplications
+                    .CountAsync(a => a.JobId == job.Id),
+                createdAt = job.CreatedAt
             };
         }
 

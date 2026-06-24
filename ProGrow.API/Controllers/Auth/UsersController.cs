@@ -39,16 +39,16 @@ namespace ProGrow.API.Controllers.Auth
         [HttpGet("google-login")]
         public IActionResult GoogleLogin()
         {
-            var redirectUrl = Url.Action(nameof(GoogleCallback));
+            var redirectUrl = Url.Action(nameof(GoogleResponse));
             var properties = new AuthenticationProperties { RedirectUri = redirectUrl };
             return Challenge(properties, GoogleDefaults.AuthenticationScheme); // "Google"
         }
         #endregion
 
-        #region GoogleCallback
-        // 2) Google will redirect here after user signs-in/consents
-        [HttpGet("google-callback")]
-        public async Task<IActionResult> GoogleCallback()
+        #region GoogleResponse
+        // 2) Google middleware will redirect here after successful token exchange
+        [HttpGet("google-response")]
+        public async Task<IActionResult> GoogleResponse()
         {
             return await _userService.GoogleCallbackAsync();
         }

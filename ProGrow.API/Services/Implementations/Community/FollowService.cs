@@ -1,4 +1,4 @@
-﻿using ProGrow.API.DTOs.Community.Follows;
+using ProGrow.API.DTOs.Community.Follows;
 using ProGrow.API.Models;
 using ProGrow.API.Services.Interfaces.Community;
 using System.Security.Claims;
@@ -163,10 +163,13 @@ namespace ProGrow.API.Services.Implementations.Community
                 await _context.UserFollows.CountAsync(x => x.UserId == userId && x.FollowedUserId != null)
                 + await _context.UserFollows.CountAsync(x => x.UserId == userId && x.FollowedCompanyId != null);
 
+            var posts = await _context.Posts.CountAsync(p => p.AuthorId == userId && p.AuthorType == "JobSeeker");
+
             return new ProfileCountsDto
             {
                 Followers = followers,
-                Followings = followings
+                Followings = followings,
+                Posts = posts
             };
         }
 
@@ -185,10 +188,13 @@ namespace ProGrow.API.Services.Implementations.Community
                 await _context.CompanyFollows.CountAsync(x => x.CompanyId == companyId && x.FollowedUserId != null)
                 + await _context.CompanyFollows.CountAsync(x => x.CompanyId == companyId && x.FollowedCompanyId != null);
 
+            var posts = await _context.Posts.CountAsync(p => p.AuthorId == companyId && p.AuthorType == "Recruiter");
+
             return new ProfileCountsDto
             {
                 Followers = followers,
-                Followings = followings
+                Followings = followings,
+                Posts = posts
             };
         }
 

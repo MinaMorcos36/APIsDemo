@@ -108,19 +108,17 @@ builder.Services.AddScoped<LanguageDetectionService>();
 builder.Services.AddScoped<CvProcessingService>();
 builder.Services.AddScoped<GeminiCvEvaluationService>();
 builder.Services.AddScoped<CareerChatService>();
-
-
+builder.Services.AddExceptionHandler<ProGrow.API.Middlewares.GlobalExceptionHandler>();
 
 var app = builder.Build();
 
-app.UseExceptionHandler();
-
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseExceptionHandler();
 
 app.UseHttpsRedirection();
 

@@ -139,8 +139,10 @@ namespace ProGrow.API.Services.Implementations.Authentication
 
         public async Task<IActionResult> GoogleCallbackAsync()
         {
-            var http = _httpContextAccessor.HttpContext!;
-            var authenticateResult = await http.AuthenticateAsync(GoogleDefaults.AuthenticationScheme);
+            try
+            {
+                var http = _httpContextAccessor.HttpContext!;
+                var authenticateResult = await http.AuthenticateAsync("External");
 
             if (!authenticateResult.Succeeded || authenticateResult?.Principal == null)
                 return new BadRequestObjectResult("Google authentication failed");
@@ -195,7 +197,15 @@ namespace ProGrow.API.Services.Implementations.Authentication
             var authorType = "JobSeeker";
             var token = _jwt.GenerateToken(user.Id, authorType, user.Email, roles);
 
-            return new OkObjectResult(new { JWT = token });
+            var rolesStr = string.Join(",", roles);
+            var redirectUrl = $"http://localhost:5173/google-callback?token={token}&userId={user.Id}&roles={rolesStr}";
+
+            return new RedirectResult(redirectUrl);
+            }
+            catch (Exception ex)
+            {
+                return new BadRequestObjectResult(ex.ToString());
+            }
         }
 
         public async Task<IActionResult> VerifyEmailAsync(VerifyUserEmailDto dto)
